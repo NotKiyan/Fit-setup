@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
 
 // --- Helper Components (SVG Icons) ---
@@ -23,8 +24,7 @@ const TwitterIcon = () => (
     </svg>
 );
 
-
-const LoginPage = ({ setIsLoginVisible, setUser }) => {
+const LoginPage = ({ setUser }) => {
     const [activeTab, setActiveTab] = useState('signin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -35,6 +35,7 @@ const LoginPage = ({ setIsLoginVisible, setUser }) => {
     const [passwordStrength, setPasswordStrength] = useState({ strength: '', percentage: 0 });
 
     const API_BASE_URL = 'http://localhost:5000';
+    const navigate = useNavigate();
 
     // Email validation
     const validateEmail = (email) => {
@@ -53,7 +54,6 @@ const LoginPage = ({ setIsLoginVisible, setUser }) => {
             special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
         };
 
-        // Count met requirements
         Object.values(requirements).forEach(met => {
             if (met) strength += 20;
         });
@@ -99,7 +99,6 @@ const LoginPage = ({ setIsLoginVisible, setUser }) => {
         e.preventDefault();
         setError('');
 
-        // Validation checks
         if (!validateEmail(email)) {
             return setError('Please enter a valid email address');
         }
@@ -134,11 +133,8 @@ const LoginPage = ({ setIsLoginVisible, setUser }) => {
             if (response.ok) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('userEmail', email);
-                console.log('Authentication successful! Token:', data.token);
-
-                // Update user state in parent component
                 setUser({ email, token: data.token });
-                setIsLoginVisible(false);
+                navigate('/'); // Navigate after successful login/register
             } else {
                 setError(data.msg || 'An unknown error occurred.');
             }
@@ -157,8 +153,8 @@ const LoginPage = ({ setIsLoginVisible, setUser }) => {
     };
 
     return (
-        <div className="login-overlay" onClick={() => setIsLoginVisible(false)}>
-        <div className="login-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="login-overlay">
+        <div className="login-modal">
         <div className="login-tabs">
         <button
         className={`tab ${activeTab === 'signin' ? 'active' : ''}`}
@@ -198,12 +194,26 @@ const LoginPage = ({ setIsLoginVisible, setUser }) => {
             onChange={(e) => setPassword(e.target.value)}
             required
             />
-            <a href="#" className="forgot-password">Forgot Password?</a>
-            <button type="submit" className="btn btn-primary form-btn">Sign In</button>
+
+            <button className="submit-btn" type="submit">
+            Sign In
+            </button>
+
+            <div className="social-buttons">
+            <button className="social-btn google-btn" title="Login with Google">
+            <GoogleIcon /> Google
+            </button>
+            <button className="social-btn facebook-btn" title="Login with Facebook">
+            <FacebookIcon /> Facebook
+            </button>
+            <button className="social-btn twitter-btn" title="Login with Twitter">
+            <TwitterIcon /> Twitter
+            </button>
+            </div>
             </form>
         ) : (
             <form className="form-container" onSubmit={handleSubmit}>
-            <h3>Create Your Account</h3>
+            <h3>Create Account</h3>
             <input
             type="email"
             placeholder="Email Address"
@@ -222,40 +232,15 @@ const LoginPage = ({ setIsLoginVisible, setUser }) => {
             onChange={handlePasswordChange}
             required
             />
-
             {password && (
-                <div className="password-strength-meter">
-                <div className="strength-bar">
+                <div className="password-strength-bar">
                 <div
-                className={`strength-bar-fill ${passwordStrength.strength}`}
+                className={`strength-fill ${passwordStrength.strength}`}
                 style={{ width: `${passwordStrength.percentage}%` }}
-                ></div>
-                </div>
-                <span className={`strength-text ${passwordStrength.strength}`}>
-                {passwordStrength.strength && `Password Strength: ${passwordStrength.strength.charAt(0).toUpperCase() + passwordStrength.strength.slice(1)}`}
-                </span>
-
-                {passwordStrength.requirements && (
-                    <ul className="password-requirements">
-                    <li className={passwordStrength.requirements.length ? 'met' : ''}>
-                    {passwordStrength.requirements.length ? '✓' : '○'} At least 8 characters
-                    </li>
-                    <li className={passwordStrength.requirements.uppercase ? 'met' : ''}>
-                    {passwordStrength.requirements.uppercase ? '✓' : '○'} One uppercase letter
-                    </li>
-                    <li className={passwordStrength.requirements.lowercase ? 'met' : ''}>
-                    {passwordStrength.requirements.lowercase ? '✓' : '○'} One lowercase letter
-                    </li>
-                    <li className={passwordStrength.requirements.number ? 'met' : ''}>
-                    {passwordStrength.requirements.number ? '✓' : '○'} One number
-                    </li>
-                    <li className={passwordStrength.requirements.special ? 'met' : ''}>
-                    {passwordStrength.requirements.special ? '✓' : '○'} One special character
-                    </li>
-                    </ul>
-                )}
+                />
                 </div>
             )}
+            {passwordError && <span className="field-error">{passwordError}</span>}
 
             <input
             type="password"
@@ -265,18 +250,12 @@ const LoginPage = ({ setIsLoginVisible, setUser }) => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             />
-            <button type="submit" className="btn btn-primary form-btn">Register</button>
+
+            <button className="submit-btn" type="submit">
+            Register
+            </button>
             </form>
         )}
-
-        <div className="social-login">
-        <p className="social-divider"><span>OR CONTINUE WITH</span></p>
-        <div className="social-icons">
-        <button className="social-btn" type="button"><GoogleIcon /></button>
-        <button className="social-btn" type="button"><FacebookIcon /></button>
-        <button className="social-btn" type="button"><TwitterIcon /></button>
-        </div>
-        </div>
         </div>
         </div>
         </div>
