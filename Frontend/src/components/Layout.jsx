@@ -103,8 +103,8 @@ export default function Layout({ user, setUser }) {
         <Link to="/" className="nav-logo">Fitsetup<span>.</span></Link>
         <div className="nav-links">
         <a href="#home" className="nav-link">Home</a>
-        <a href="#equipment" className="nav-link">Equipment</a>
-        <a href="#Functional" className="nav-link">Functional</a>
+        <a href="#equipments" className="nav-link">Equipments</a>
+        <a href="#Apparels" className="nav-link">Apparels</a>
         <a href="#blog" className="nav-link">Blog</a>
         </div>
         <div className="nav-actions">

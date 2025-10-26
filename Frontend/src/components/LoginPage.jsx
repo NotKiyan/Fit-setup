@@ -24,7 +24,7 @@ const TwitterIcon = () => (
     </svg>
 );
 
-const LoginPage = ({ setUser, setIsLoginVisible }) => {
+const LoginPage = ({ setUser }) => {
     const [activeTab, setActiveTab] = useState('signin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -104,8 +104,7 @@ const LoginPage = ({ setUser, setIsLoginVisible }) => {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('userEmail', email);
                 setUser({ email, token: data.token });
-                navigate('/');
-                if (setIsLoginVisible) setIsLoginVisible(false);
+                navigate('/', { replace: true });
             } else {
                 setError(data.msg || 'An unknown error occurred.');
             }
@@ -123,111 +122,111 @@ const LoginPage = ({ setUser, setIsLoginVisible }) => {
     };
 
     return (
-        <div className="login-overlay" onClick={() => setIsLoginVisible(false)}>
-        <div className="login-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="login-tabs">
-        <button
-        className={`tab ${activeTab === 'signin' ? 'active' : ''}`}
-        onClick={() => handleTabChange('signin')}
-        >
-        Sign In
-        </button>
-        <button
-        className={`tab ${activeTab === 'register' ? 'active' : ''}`}
-        onClick={() => handleTabChange('register')}
-        >
-        Register
-        </button>
-        </div>
-
-        <div className="login-content">
-        {error && <div className="error-message">{error}</div>}
-
-        {activeTab === 'signin' ? (
-            <form className="form-container" onSubmit={handleSubmit}>
-            <h3>Welcome Back</h3>
-            <input
-            type="email"
-            placeholder="Email Address"
-            className={`form-input ${emailError ? 'error' : ''}`}
-            value={email}
-            onChange={handleEmailChange}
-            required
-            />
-            {emailError && <span className="field-error">{emailError}</span>}
-
-            <input
-            type="password"
-            placeholder="Password"
-            className="form-input"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            />
-
-            <button className="form-btn" type="submit">Sign In</button>
-
-            <div className="social-login">
-            <div className="social-divider"><span>or</span></div>
-            <div className="social-icons">
-            <div className="social-btn"><GoogleIcon /></div>
-            <div className="social-btn"><FacebookIcon /></div>
-            <div className="social-btn"><TwitterIcon /></div>
-            </div>
-            </div>
-            </form>
-        ) : (
-            <form className="form-container" onSubmit={handleSubmit}>
-            <h3>Create Account</h3>
-            <input
-            type="email"
-            placeholder="Email Address"
-            className={`form-input ${emailError ? 'error' : ''}`}
-            value={email}
-            onChange={handleEmailChange}
-            required
-            />
-            {emailError && <span className="field-error">{emailError}</span>}
-
-            <input
-            type="password"
-            placeholder="Password"
-            className={`form-input ${passwordError ? 'error' : ''}`}
-            value={password}
-            onChange={handlePasswordChange}
-            required
-            />
-
-            {password && (
-                <div className="password-strength-meter">
-                <div className="strength-bar">
-                <div
-                className={`strength-bar-fill ${passwordStrength.strength}`}
-                style={{ width: `${passwordStrength.percentage}%` }}
-                ></div>
+        <div className="login-page-container">
+            <div className="login-card">
+                <div className="login-tabs">
+                    <button
+                        className={`tab ${activeTab === 'signin' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('signin')}
+                    >
+                        Sign In
+                    </button>
+                    <button
+                        className={`tab ${activeTab === 'register' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('register')}
+                    >
+                        Register
+                    </button>
                 </div>
-                <p className={`strength-text ${passwordStrength.strength}`}>
-                {passwordStrength.strength && passwordStrength.strength.toUpperCase()}
-                </p>
+
+                <div className="login-content">
+                    {error && <div className="error-message">{error}</div>}
+
+                    {activeTab === 'signin' ? (
+                        <form className="form-container" onSubmit={handleSubmit}>
+                            <h3>Welcome Back</h3>
+                            <input
+                                type="email"
+                                placeholder="Email Address"
+                                className={`form-input ${emailError ? 'error' : ''}`}
+                                value={email}
+                                onChange={handleEmailChange}
+                                required
+                            />
+                            {emailError && <span className="field-error">{emailError}</span>}
+
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                className="form-input"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+
+                            <button className="btn btn-primary form-btn" type="submit">Sign In</button>
+
+                            <div className="social-login">
+                                <div className="social-divider"><span>or</span></div>
+                                <div className="social-icons">
+                                    <div className="social-btn"><GoogleIcon /></div>
+                                    <div className="social-btn"><FacebookIcon /></div>
+                                    <div className="social-btn"><TwitterIcon /></div>
+                                </div>
+                            </div>
+                        </form>
+                    ) : (
+                        <form className="form-container" onSubmit={handleSubmit}>
+                            <h3>Create Account</h3>
+                            <input
+                                type="email"
+                                placeholder="Email Address"
+                                className={`form-input ${emailError ? 'error' : ''}`}
+                                value={email}
+                                onChange={handleEmailChange}
+                                required
+                            />
+                            {emailError && <span className="field-error">{emailError}</span>}
+
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                className={`form-input ${passwordError ? 'error' : ''}`}
+                                value={password}
+                                onChange={handlePasswordChange}
+                                required
+                            />
+
+                            {password && (
+                                <div className="password-strength-meter">
+                                    <div className="strength-bar">
+                                        <div
+                                            className={`strength-bar-fill ${passwordStrength.strength}`}
+                                            style={{ width: `${passwordStrength.percentage}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className={`strength-text ${passwordStrength.strength}`}>
+                                        {passwordStrength.strength && `Password Strength: ${passwordStrength.strength.toUpperCase()}`}
+                                    </p>
+                                </div>
+                            )}
+
+                            {passwordError && <span className="field-error">{passwordError}</span>}
+
+                            <input
+                                type="password"
+                                placeholder="Confirm Password"
+                                className="form-input"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                            />
+
+                            <button className="btn btn-primary form-btn" type="submit">Register</button>
+                        </form>
+                    )}
                 </div>
-            )}
-
-            {passwordError && <span className="field-error">{passwordError}</span>}
-
-            <input
-            type="password"
-            placeholder="Confirm Password"
-            className="form-input"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            />
-
-            <button className="form-btn" type="submit">Register</button>
-            </form>
-        )}
-        </div>
-        </div>
+            </div>
         </div>
     );
 };
