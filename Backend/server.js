@@ -29,6 +29,7 @@ app.use('/api/auth', require('./routes/auth'));
 
 // Mount the user routes
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 // --- Server Initialization ---
 const PORT = process.env.PORT || 5000;
 

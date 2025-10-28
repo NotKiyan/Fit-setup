@@ -27,7 +27,7 @@ const AdminDashboard = ({ user }) => {
     // Fetch stats
     const fetchStats = async () => {
         try {
-            const response = await fetch('http://localhost:5001/api/admin/stats', {
+            const response = await fetch('http://localhost:5000/api/admin/stats', {
                 headers: {
                     'Authorization': `Bearer ${user.token}`
                 }
@@ -43,7 +43,7 @@ const AdminDashboard = ({ user }) => {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/admin/products', {
+            const response = await fetch('http://localhost:5000/api/admin/products', {
                 headers: {
                     'Authorization': `Bearer ${user.token}`
                 }
@@ -60,7 +60,7 @@ const AdminDashboard = ({ user }) => {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/admin/users', {
+            const response = await fetch('http://localhost:5000/api/admin/users', {
                 headers: {
                     'Authorization': `Bearer ${user.token}`
                 }
@@ -82,8 +82,8 @@ const AdminDashboard = ({ user }) => {
 
         try {
             const url = editingProduct
-                ? `http://localhost:5001/api/admin/products/${editingProduct._id}`
-                : 'http://localhost:5001/api/admin/products';
+                ? `http://localhost:5000/api/admin/products/${editingProduct._id}`
+                : 'http://localhost:5000/api/admin/products';
 
             const method = editingProduct ? 'PUT' : 'POST';
 
@@ -126,7 +126,7 @@ const AdminDashboard = ({ user }) => {
         if (!window.confirm('Are you sure you want to delete this product?')) return;
 
         try {
-            const response = await fetch(`http://localhost:5001/api/admin/products/${productId}`, {
+            const response = await fetch(`http://localhost:5000/api/admin/products/${productId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${user.token}`
@@ -180,7 +180,7 @@ const AdminDashboard = ({ user }) => {
         if (!window.confirm('Are you sure you want to delete this user?')) return;
 
         try {
-            const response = await fetch(`http://localhost:5001/api/admin/users/${userId}`, {
+            const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${user.token}`
@@ -207,7 +207,7 @@ const AdminDashboard = ({ user }) => {
         if (!window.confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
 
         try {
-            const response = await fetch(`http://localhost:5001/api/admin/users/${userId}/role`, {
+            const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

@@ -18,7 +18,14 @@ const UserSchema = new mongoose.Schema({
         minlength: 8,
         select: false
     },
-    // --- ADDED FIELDS ---
+
+    role: {
+        type: String,
+        required: true,
+        default: 'customer',
+    },
+    // ----------------------
+
     first_name: {
         type: String,
         maxLength: 100,
@@ -38,14 +45,10 @@ const UserSchema = new mongoose.Schema({
         street: { type: String, maxLength: 255, default: '' },
         city: { type: String, maxLength: 100, default: '' },
         zip_code: { type: String, maxLength: 20, default: '' },
-        // You might want to add state and country later too
-        // state: { type: String, maxLength: 100, default: '' },
-        // country: { type: String, maxLength: 100, default: '' }
     }
 }, {
-    timestamps: true // Adds created_at and updated_at automatically
+    timestamps: true
 });
-
 // --- Mongoose Middleware ---
 // Hash password before saving (remains the same)
 UserSchema.pre('save', async function (next) {
@@ -54,18 +57,13 @@ UserSchema.pre('save', async function (next) {
     }
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    next(); // Ensure next() is called after hashing
+    next();
 });
 
 
 // --- Mongoose Methods ---
 // Method to compare entered password (remains the same)
 UserSchema.methods.matchPassword = async function (enteredPassword) {
-    // Since password has select: false, it won't be available here unless explicitly requested
-    // You might need to fetch the user again including the password for login comparison
-    // For profile updates, we don't need password comparison directly in this method.
-    // However, the login route will need adjustment if not already handled.
-    // Let's assume the login route fetches the password separately for comparison.
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
