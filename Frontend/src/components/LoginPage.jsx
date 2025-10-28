@@ -34,6 +34,7 @@ const LoginPage = ({ setUser }) => {
     const [passwordError, setPasswordError] = useState('');
     const [passwordStrength, setPasswordStrength] = useState({ strength: '', percentage: 0 });
 
+    // API_BASE_URL from file 2
     const API_BASE_URL = 'http://localhost:5000';
     const navigate = useNavigate();
 
@@ -74,6 +75,7 @@ const LoginPage = ({ setUser }) => {
         }
     };
 
+    // handleSubmit from file 2 (includes role handling and admin redirect)
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -101,10 +103,20 @@ const LoginPage = ({ setUser }) => {
 
             const data = await response.json();
             if (response.ok) {
+                // Set token, email, and role in localStorage
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('userEmail', email);
-                setUser({ email, token: data.token });
-                navigate('/', { replace: true });
+                localStorage.setItem('userRole', data.role || 'customer');
+
+                // Set user state with role
+                setUser({ email, token: data.token, role: data.role || 'customer' });
+
+                // Redirect admin to admin dashboard, regular users to home
+                if (data.role === 'admin') {
+                    navigate('/admin', { replace: true });
+                } else {
+                    navigate('/', { replace: true });
+                }
             } else {
                 setError(data.msg || 'An unknown error occurred.');
             }
@@ -123,110 +135,110 @@ const LoginPage = ({ setUser }) => {
 
     return (
         <div className="login-page-container">
-            <div className="login-card">
-                <div className="login-tabs">
-                    <button
-                        className={`tab ${activeTab === 'signin' ? 'active' : ''}`}
-                        onClick={() => handleTabChange('signin')}
-                    >
-                        Sign In
-                    </button>
-                    <button
-                        className={`tab ${activeTab === 'register' ? 'active' : ''}`}
-                        onClick={() => handleTabChange('register')}
-                    >
-                        Register
-                    </button>
-                </div>
+        <div className="login-card">
+        <div className="login-tabs">
+        <button
+        className={`tab ${activeTab === 'signin' ? 'active' : ''}`}
+        onClick={() => handleTabChange('signin')}
+        >
+        Sign In
+        </button>
+        <button
+        className={`tab ${activeTab === 'register' ? 'active' : ''}`}
+        onClick={() => handleTabChange('register')}
+        >
+        Register
+        </button>
+        </div>
 
-                <div className="login-content">
-                    {error && <div className="error-message">{error}</div>}
+        <div className="login-content">
+        {error && <div className="error-message">{error}</div>}
 
-                    {activeTab === 'signin' ? (
-                        <form className="form-container" onSubmit={handleSubmit}>
-                            <h3>Welcome Back</h3>
-                            <input
-                                type="email"
-                                placeholder="Email Address"
-                                className={`form-input ${emailError ? 'error' : ''}`}
-                                value={email}
-                                onChange={handleEmailChange}
-                                required
-                            />
-                            {emailError && <span className="field-error">{emailError}</span>}
+        {activeTab === 'signin' ? (
+            <form className="form-container" onSubmit={handleSubmit}>
+            <h3>Welcome Back</h3>
+            <input
+            type="email"
+            placeholder="Email Address"
+            className={`form-input ${emailError ? 'error' : ''}`}
+            value={email}
+            onChange={handleEmailChange}
+            required
+            />
+            {emailError && <span className="field-error">{emailError}</span>}
 
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                className="form-input"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
+            <input
+            type="password"
+            placeholder="Password"
+            className="form-input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            />
 
-                            <button className="btn btn-primary form-btn" type="submit">Sign In</button>
+            <button className="btn btn-primary form-btn" type="submit">Sign In</button>
 
-                            <div className="social-login">
-                                <div className="social-divider"><span>or</span></div>
-                                <div className="social-icons">
-                                    <div className="social-btn"><GoogleIcon /></div>
-                                    <div className="social-btn"><FacebookIcon /></div>
-                                    <div className="social-btn"><TwitterIcon /></div>
-                                </div>
-                            </div>
-                        </form>
-                    ) : (
-                        <form className="form-container" onSubmit={handleSubmit}>
-                            <h3>Create Account</h3>
-                            <input
-                                type="email"
-                                placeholder="Email Address"
-                                className={`form-input ${emailError ? 'error' : ''}`}
-                                value={email}
-                                onChange={handleEmailChange}
-                                required
-                            />
-                            {emailError && <span className="field-error">{emailError}</span>}
-
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                className={`form-input ${passwordError ? 'error' : ''}`}
-                                value={password}
-                                onChange={handlePasswordChange}
-                                required
-                            />
-
-                            {password && (
-                                <div className="password-strength-meter">
-                                    <div className="strength-bar">
-                                        <div
-                                            className={`strength-bar-fill ${passwordStrength.strength}`}
-                                            style={{ width: `${passwordStrength.percentage}%` }}
-                                        ></div>
-                                    </div>
-                                    <p className={`strength-text ${passwordStrength.strength}`}>
-                                        {passwordStrength.strength && `Password Strength: ${passwordStrength.strength.toUpperCase()}`}
-                                    </p>
-                                </div>
-                            )}
-
-                            {passwordError && <span className="field-error">{passwordError}</span>}
-
-                            <input
-                                type="password"
-                                placeholder="Confirm Password"
-                                className="form-input"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                            />
-
-                            <button className="btn btn-primary form-btn" type="submit">Register</button>
-                        </form>
-                    )}
-                </div>
+            <div className="social-login">
+            <div className="social-divider"><span>or</span></div>
+            <div className="social-icons">
+            <div className="social-btn"><GoogleIcon /></div>
+            <div className="social-btn"><FacebookIcon /></div>
+            <div className="social-btn"><TwitterIcon /></div>
             </div>
+            </div>
+            </form>
+        ) : (
+            <form className="form-container" onSubmit={handleSubmit}>
+            <h3>Create Account</h3>
+            <input
+            type="email"
+            placeholder="Email Address"
+            className={`form-input ${emailError ? 'error' : ''}`}
+            value={email}
+            onChange={handleEmailChange}
+            required
+            />
+            {emailError && <span className="field-error">{emailError}</span>}
+
+            <input
+            type="password"
+            placeholder="Password"
+            className={`form-input ${passwordError ? 'error' : ''}`}
+            value={password}
+            onChange={handlePasswordChange}
+            required
+            />
+
+            {password && (
+                <div className="password-strength-meter">
+                <div className="strength-bar">
+                <div
+                className={`strength-bar-fill ${passwordStrength.strength}`}
+                style={{ width: `${passwordStrength.percentage}%` }}
+                ></div>
+                </div>
+                <p className={`strength-text ${passwordStrength.strength}`}>
+                {passwordStrength.strength && `Password Strength: ${passwordStrength.strength.toUpperCase()}`}
+                </p>
+                </div>
+            )}
+
+            {passwordError && <span className="field-error">{passwordError}</span>}
+
+            <input
+            type="password"
+            placeholder="Confirm Password"
+            className="form-input"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            />
+
+            <button className="btn btn-primary form-btn" type="submit">Register</button>
+            </form>
+        )}
+        </div>
+        </div>
         </div>
     );
 };

@@ -1,0 +1,124 @@
+.equipments-page-container {
+    /* Add padding to account for the fixed header */
+    padding-top: 100px;
+    min-height: 100vh;
+    width: 100%;
+    /* Use 'container' class styles from App.css or define here */
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 40px;
+}
+
+.equipments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.equipments-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-transform: capitalize;
+    color: #333;
+    margin: 0;
+}
+
+.back-button {
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.back-button:hover {
+    background: #e0e0e0;
+    border-color: #ccc;
+}
+
+/* --- Grid for categories --- */
+.category-grid {
+    display: grid;
+    /* Responsive grid:
+     *      - 1 column on smallest screens
+     *      - 'auto-fit' fills as many columns as possible
+     *      - 'minmax(250px, 1fr)' means each column is at least 250px wide and max 1fr (equal share)
+     */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.category-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.category-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.category-card h3 {
+    padding: 1rem 1.25rem;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #222;
+    margin: 0;
+    /* Ensures cards in the same row have same height */
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- Styles for the two main category cards to make them bigger --- */
+.main-category-grid {
+    /* Make main categories have a max of 2 columns */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    max-width: 800px;
+    margin: 2rem auto 0;
+}
+
+.main-category-grid .category-card img {
+    height: 250px;
+}
+
+.main-category-grid .category-card h3 {
+    font-size: 1.5rem;
+    padding: 1.5rem;
+}
+
+/* --- Placeholder for final product list --- */
+.product-list {
+    padding: 2rem;
+    background: #f9f9f9;
+    border-radius: 8px;
+    min-height: 300px;
+}
+
+.product-list p {
+    font-size: 1.1rem;
+    color: #555;
+}

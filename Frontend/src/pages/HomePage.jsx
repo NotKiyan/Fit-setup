@@ -63,76 +63,77 @@ const HomePage = () => {
 
   return (
     <main>
-      <section id="home" className="hero">
-        <video className="hero-video" autoPlay loop muted playsInline>
-          <source src={homeGymVideo} type="video/mp4" />
-        </video>
-        <div className="hero-overlay"></div>
-        <div className="hero-content container">
-          <h1 ref={addToRefs} className="fade-in-section">ENGINEER YOUR EVOLUTION.</h1>
-          <p ref={addToRefs} className="fade-in-section" style={{ transitionDelay: '0.2s' }}>Premium equipment for the dedicated athlete. Built for performance, designed for results.</p>
-          <div ref={addToRefs} className="fade-in-section" style={{ transitionDelay: '0.4s' }}>
-            <a href="#equipment" className="btn btn-primary">Shop All Equipment</a>
-          </div>
-        </div>
-      </section>
+    <section id="home" className="hero">
+    <video className="hero-video" autoPlay loop muted playsInline>
+    <source src={homeGymVideo} type="video/mp4" />
+    </video>
+    <div className="hero-overlay"></div>
+    <div className="hero-content container">
+    <h1 ref={addToRefs} className="fade-in-section">ENGINEER YOUR EVOLUTION.</h1>
+    <p ref={addToRefs} className="fade-in-section" style={{ transitionDelay: '0.2s' }}>Premium equipment for the dedicated athlete. Built for performance, designed for results.</p>
+    <div ref={addToRefs} className="fade-in-section" style={{ transitionDelay: '0.4s' }}>
+    <a href="#equipment" className="btn btn-primary">Shop All Equipment</a>
+    </div>
+    </div>
+    </section>
 
-      <TrustedBy />
+    <TrustedBy />
 
-      <section id="categories" className="section container">
-        <div ref={addToRefs} className="fade-in-section section-header">
-          <h2>Shop by Category</h2>
-          <p>From heavy lifting to high-intensity training, find exactly what you need to crush your goals.</p>
-        </div>
-        <div className="category-grid">
-          {categories.map((cat, index) => (
-            <div key={cat.name} ref={addToRefs} className="fade-in-section category-card" style={{ transitionDelay: `${index * 0.1}s` }}>
-              <img src={cat.image} alt={cat.name} />
-              <h3>{cat.name}</h3>
-            </div>
-          ))}
-        </div>
-      </section>
+    <section id="categories" className="section container">
+    <div ref={addToRefs} className="fade-in-section section-header">
+    <h2>Shop by Category</h2>
+    <p>From heavy lifting to high-intensity training, find exactly what you need to crush your goals.</p>
+    </div>
+    <div className="home-category-grid">
+    {categories.map((cat, index) => (
+      // Removed comment from the previous line
+      <div key={cat.name} ref={addToRefs} className="fade-in-section home-category-card" style={{ transitionDelay: `${index * 0.1}s` }}>
+      <img src={cat.image} alt={cat.name} />
+      <h3>{cat.name}</h3>
+      </div>
+    ))}
+    </div>
+    </section>
 
-      <section id="equipment" className="section container">
-        <div ref={addToRefs} className="fade-in-section section-header">
-          <h2>Best Sellers</h2>
-          <p>Discover our most popular items, trusted by thousands of athletes to deliver peak performance.</p>
-        </div>
-        <div ref={addToRefs} className="fade-in-section product-carousel">
-          {featuredProducts.map(product => (
-            <div key={product.id} className="product-card">
-              <img src={product.image} alt={product.name} className="product-image" />
-              <div className="product-info">
-                <h3 className="product-name">{product.name}</h3>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+    <section id="equipment" className="section container">
+    <div ref={addToRefs} className="fade-in-section section-header">
+    <h2>Best Sellers</h2>
+    <p>Discover our most popular items, trusted by thousands of athletes to deliver peak performance.</p>
+    </div>
+    <div ref={addToRefs} className="fade-in-section product-carousel">
+    {featuredProducts.map(product => (
+      <div key={product.id} className="product-card">
+      <img src={product.image} alt={product.name} className="product-image" />
+      <div className="product-info">
+      <h3 className="product-name">{product.name}</h3>
+      </div>
+      </div>
+    ))}
+    </div>
+    </section>
 
-      <section id="testimonials" className="section container">
-        <div ref={addToRefs} className="fade-in-section section-header">
-          <h2>What Our Members Say</h2>
-          <p>Real stories from the people who use our gear to push their limits every day.</p>
-        </div>
-        <div className="testimonials-grid">
-          {testimonials.map((t, index) => (
-            <div key={index} ref={addToRefs} className="fade-in-section testimonial-card" style={{ transitionDelay: `${index * 0.1}s` }}>
-              <p className="testimonial-quote">"{t.quote}"</p>
-              <p className="testimonial-author">- {t.author}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+    <section id="testimonials" className="section container">
+    <div ref={addToRefs} className="fade-in-section section-header">
+    <h2>What Our Members Say</h2>
+    <p>Real stories from the people who use our gear to push their limits every day.</p>
+    </div>
+    <div className="testimonials-grid">
+    {testimonials.map((t, index) => (
+      <div key={index} ref={addToRefs} className="fade-in-section testimonial-card" style={{ transitionDelay: `${index * 0.1}s` }}>
+      <p className="testimonial-quote">"{t.quote}"</p>
+      <p className="testimonial-author">- {t.author}</p>
+      </div>
+    ))}
+    </div>
+    </section>
 
-      <section className="section container">
-        <div ref={addToRefs} className="fade-in-section cta-section">
-          <h2>Ready to Build Your Ultimate Gym?</h2>
-          <p>Explore our full range of professional-grade equipment and start your journey today.</p>
-          <a href="#equipment" className="btn btn-secondary">Explore Collection</a>
-        </div>
-      </section>
+    <section className="section container">
+    <div ref={addToRefs} className="fade-in-section cta-section">
+    <h2>Ready to Build Your Ultimate Gym?</h2>
+    <p>Explore our full range of professional-grade equipment and start your journey today.</p>
+    <a href="#equipment" className="btn btn-secondary">Explore Collection</a>
+    </div>
+    </section>
     </main>
   );
 };

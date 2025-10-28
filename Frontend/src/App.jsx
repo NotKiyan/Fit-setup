@@ -1,59 +1,101 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import './App.css';
-import Layout from './components/Layout';
-import HomePage from './pages/HomePage.jsx';
-import UserProfile from './components/UserProfile';
-import CartPage from './pages/CartPage.jsx';
-import LoginPage from './components/LoginPage';
-import RequireAuth from './components/RequireAuth';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import './App.css'; //
+import Layout from './components/Layout'; //
+import HomePage from './pages/HomePage.jsx'; //
+import UserProfile from './components/UserProfile'; //
+import CartPage from './pages/CartPage.jsx'; //
+import BlogPage from './pages/BlogPage.jsx'; // Added
+import LoginPage from './components/LoginPage'; //
+import RequireAuth from './components/RequireAuth'; //
+import AdminDashboard from './components/AdminDashboard'; // Added
+import EquipmentsPage from './pages/EquipmentsPage'; //
+import ApparelsPage from './pages/ApparelsPage'; //
 
+/**
+ * This component contains the routing logic and location-based effects.
+ * It's wrapped by <Router> in the App component.
+ */
 function AppContent({ user, setUser }) {
   const location = useLocation();
+  const navigate = useNavigate(); // Hook used for profile page
 
-  // Re-check user on location change
+  // Combined useEffect: Checks for user role (from file 2) and handles auto-logout (from file 1)
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole'); // From file 2
+
     if (token && userEmail && !user) {
-      setUser({ email: userEmail, token });
+      // Set user with role
+      setUser({ email: userEmail, token, role: userRole || 'customer' });
+    } else if (!token && user) {
+      // Auto-logout if token disappears
+      setUser(null);
     }
-  }, [location, user, setUser]);
+  }, [location, user, setUser]); // Dependencies cover all cases
 
   return (
     <Routes>
-      <Route element={<Layout user={user} setUser={setUser} />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage setUser={setUser} />} />
-        <Route
-          path="/profile"
-          element={
-            <RequireAuth user={user}>
-              <UserProfile user={user} />
-            </RequireAuth>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Route>
+    {/* Routes WITH Layout */}
+    <Route element={<Layout user={user} setUser={setUser} />}>
+    <Route path="/" element={<HomePage />} />
+    <Route path="/cart" element={<CartPage />} />
+    <Route path="/equipments" element={<EquipmentsPage />} />
+    <Route path="/apparels" element={<ApparelsPage />} />
+    <Route path="/blog" element={<BlogPage />} /> {/* Added from file 2 */}
+    <Route path="*" element={<Navigate to="/" replace />} /> {/* Catch-all inside Layout */}
+    </Route>
+
+    {/* Routes WITHOUT Layout */}
+    <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage setUser={setUser} />} />
+
+    <Route
+    path="/profile"
+    element={
+      <RequireAuth user={user}>
+      {/* Using file 1's logic to allow "back" navigation */}
+      <UserProfile user={user} setIsProfileVisible={() => navigate(-1)} />
+      </RequireAuth>
+    }
+    />
+
+    <Route
+    path="/admin" // Added from file 2
+    element={
+      <RequireAuth user={user}>
+      {/* Logic from file 2 to check admin role */}
+      {user && user.role === 'admin' ? (
+        <AdminDashboard user={user} />
+      ) : (
+        <Navigate to="/" replace />
+      )}
+      </RequireAuth>
+    }
+    />
     </Routes>
   );
 }
 
+/**
+ * Main App component. Sets up the Router and global user state.
+ */
 export default function App() {
   const [user, setUser] = useState(null);
 
+  // Initial check for user token on app load (from file 2, includes role)
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
     if (token && userEmail) {
-      setUser({ email: userEmail, token });
+      setUser({ email: userEmail, token, role: userRole || 'customer' });
     }
-  }, []);
+  }, []); // Runs only once on mount
 
   return (
     <Router>
-      <AppContent user={user} setUser={setUser} />
+    <AppContent user={user} setUser={setUser} />
     </Router>
   );
 }

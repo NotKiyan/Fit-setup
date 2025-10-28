@@ -379,3 +379,141 @@
     cursor: pointer;
     transition: all 0;
 }
+
+/* ===== Additions for Personal Info Section ===== */
+
+/* Make radio buttons inline */
+.radio-group {
+    display: flex;
+    gap: 20px;
+    margin-top: 5px; /* Add some space above radio buttons */
+}
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400; /* Normal weight for options */
+    margin-bottom: 0; /* Override default form-group label margin */
+    cursor: pointer;
+}
+.radio-group input[type="radio"] {
+    margin: 0; /* Remove default margins */
+    width: auto; /* Allow natural sizing */
+    padding: 0; /* Remove padding */
+}
+
+
+/* Checkbox styling (similar to radio) */
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+    margin-bottom: 0;
+    cursor: pointer;
+}
+.checkbox-group input[type="checkbox"] {
+    margin: 0;
+    width: auto;
+    padding: 0;
+}
+
+/* Multi-column layout for checkboxes */
+.checkbox-group-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjust minmax as needed */
+    gap: 10px 15px; /* Row and column gap */
+    margin-top: 5px;
+}
+
+/* Scrollable checkbox container */
+.checkbox-group-scroll {
+    max-height: 150px; /* Adjust height as needed */
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #fdfdfd; /* Slightly different background */
+}
+
+/* Styling for equipment selection subgroups */
+.equipment-selection {
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    border-radius: 8px;
+    background-color: var(--bg-color); /* Use main background color */
+}
+.equipment-selection > label {
+    margin-bottom: 15px; /* More space for main label */
+    font-size: 1rem; /* Slightly larger */
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+.equipment-subgroup {
+    margin-bottom: 15px;
+}
+.equipment-subgroup:last-child {
+    margin-bottom: 0;
+}
+
+.equipment-subgroup h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/* Adjust overall form gap for personal info if needed */
+.personal-info-form {
+    gap: 25px; /* Slightly more space between groups */
+}
+
+
+/* General Container - Adjust if using full page instead of modal */
+.profile-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; /* Prevent body scroll */
+    padding-top: 80px;
+}
+
+/* Ensure profile-content scrolls independently */
+.profile-content {
+    height: 100vh;
+    overflow-y: auto;
+    padding-bottom: 60px; /* Add padding at the bottom */
+}
+
+
+/* Responsive adjustments might be needed */
+@media (max-width: 768px) {
+    .profile-container {
+        flex-direction: column;
+        height: auto; /* Allow content to determine height */
+        overflow-y: auto; /* Allow scrolling on the container itself */
+    }
+    .profile-sidebar {
+        width: 100%;
+        height: auto; /* Adjust height */
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .profile-content {
+        height: auto; /* Adjust height */
+        overflow-y: visible; /* Remove internal scroll */
+        padding: 20px;
+    }
+    .profile-close-btn { /* Adjust close button if used */
+        top: 10px;
+        right: 10px;
+    }
+    .form-row {
+        grid-template-columns: 1fr; /* Stack form fields */
+    }
+    .checkbox-group-columns {
+        grid-template-columns: 1fr; /* Stack checkboxes */
+    }
+
+}
