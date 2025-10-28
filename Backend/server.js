@@ -27,7 +27,8 @@ app.get('/', (req, res) => res.send('Fitsetup API is running...'));
 // Mount the authentication routes
 app.use('/api/auth', require('./routes/auth'));
 
-
+// Mount the user routes
+app.use('/api/users', require('./routes/userRoutes'));
 // --- Server Initialization ---
 const PORT = process.env.PORT || 5000;
 

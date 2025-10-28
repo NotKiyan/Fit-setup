@@ -1,7 +1,12 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Middleware to protect routes
+/**
+ * Middleware to protect routes:
+ * 1. Checks for a valid JWT in the Authorization header.
+ * 2. Verifies the token.
+ * 3. Attaches the user object (minus password) to req.user.
+ */
 const protect = async (req, res, next) => {
     let token;
 
@@ -35,4 +40,19 @@ const protect = async (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+/**
+ * Middleware to check if user is an admin.
+ * This middleware should be used AFTER the 'protect' middleware.
+ */
+const admin = (req, res, next) => {
+    // req.user is attached by the 'protect' middleware
+    if (req.user && req.user.role === 'admin') {
+        next(); // User is an admin, proceed
+    } else {
+        // User is authenticated but not an admin
+        res.status(403).json({ msg: 'Access denied. Admin privileges required.' });
+    }
+};
+
+// Export both middlewares
+module.exports = { protect, admin };

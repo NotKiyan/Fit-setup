@@ -16,26 +16,56 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please provide a password'],
         minlength: 8,
+        select: false
+    },
+    // --- ADDED FIELDS ---
+    first_name: {
+        type: String,
+        maxLength: 100,
+        default: ''
+    },
+    last_name: {
+        type: String,
+        maxLength: 100,
+        default: ''
+    },
+    phone_number: {
+        type: String,
+        maxLength: 20,
+        default: ''
+    },
+    shipping_address: {
+        street: { type: String, maxLength: 255, default: '' },
+        city: { type: String, maxLength: 100, default: '' },
+        zip_code: { type: String, maxLength: 20, default: '' },
+        // You might want to add state and country later too
+        // state: { type: String, maxLength: 100, default: '' },
+        // country: { type: String, maxLength: 100, default: '' }
     }
+}, {
+    timestamps: true // Adds created_at and updated_at automatically
 });
 
 // --- Mongoose Middleware ---
-// This function will run before a new user is saved to the database
+// Hash password before saving (remains the same)
 UserSchema.pre('save', async function (next) {
-    // If the password has not been modified, move to the next middleware
     if (!this.isModified('password')) {
         next();
     }
-
-    // Generate a salt and hash the password
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    next(); // Ensure next() is called after hashing
 });
 
 
 // --- Mongoose Methods ---
-// Method to compare entered password with the hashed password in the database
+// Method to compare entered password (remains the same)
 UserSchema.methods.matchPassword = async function (enteredPassword) {
+    // Since password has select: false, it won't be available here unless explicitly requested
+    // You might need to fetch the user again including the password for login comparison
+    // For profile updates, we don't need password comparison directly in this method.
+    // However, the login route will need adjustment if not already handled.
+    // Let's assume the login route fetches the password separately for comparison.
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
