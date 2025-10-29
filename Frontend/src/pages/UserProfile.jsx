@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './UserProfile.css';
+import TrainingLog from '../components/TrainingLog.jsx';
+import ProgressAnalytics from '../components/ProgressAnalytics.jsx';
 
 // --- SVG Icons ---
 const UserIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
@@ -19,7 +21,8 @@ const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height
 const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>;
 const EyeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
 const XSquareIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>;
-
+const ListIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>;
+const BarChart2Icon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>;
 
 // --- Helper: Options ---
 const equipmentUseOptions = ["GYM", "ACCESSORY", "BODY WEIGHTS (NO EQUIPMENT)", "HOME GYM"];
@@ -555,6 +558,7 @@ export default function ProfilePage({ user, setUser }) {
                         </div>
                     );
                 }
+
                 // CREATE OR EDIT MODE
                 if (viewMode === 'create' || (viewMode === 'edit' && selectedPlan)) {
                     const isEditing = viewMode === 'edit';
@@ -668,6 +672,10 @@ export default function ProfilePage({ user, setUser }) {
                     );
                 }
                 // --- END Training Plans Case ---
+                case 'trainingLog':
+                    return <TrainingLog user={user} allExercises={allExercises} />;
+                case 'progress':
+                    return <ProgressAnalytics user={user} />;
 
                 case 'orders': return ( <div className="profile-section"><div className="section-header"><h3>Order History</h3><p>Your past purchases.</p></div>{orders.length === 0 ? <p>No orders yet.</p> : <div>Display orders...</div>}</div> );
                 case 'wishlist': return ( <div className="profile-section"><div className="section-header"><h3>My Wishlist</h3><p>Your saved items.</p></div>{wishlist.length === 0 ? <p>Wishlist is empty.</p> : <div>Display wishlist...</div>}</div> );
@@ -743,6 +751,8 @@ export default function ProfilePage({ user, setUser }) {
         <a className={activeSection === 'details' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('details'); }}><UserIcon /> <span>Account Details</span></a>
         <a className={activeSection === 'personalInfo' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('personalInfo'); }}><ClipboardIcon /> <span>Personal Info</span></a>
         <a className={activeSection === 'trainingPlans' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('trainingPlans'); }}><DumbbellIcon/> <span>Training Plans</span></a>
+        <a className={activeSection === 'trainingLog' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('trainingLog'); }}><ListIcon/> <span>Training Log</span></a>
+        <a className={activeSection === 'progress' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('progress'); }}><BarChart2Icon/> <span>Progress</span></a>
         <a className={activeSection === 'orders' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('orders'); }}><PackageIcon/> <span>Order History</span></a>
         <a className={activeSection === 'wishlist' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('wishlist'); }}><HeartIcon/> <span>My Wishlist</span></a>
         <a className={activeSection === 'shipping' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('shipping'); }}><TruckIcon/> <span>Shipping</span></a>

@@ -219,6 +219,14 @@
     flex-shrink: 0;
 }
 
+.profile-form.personal-info-form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px; /* Slightly more space between groups */
+    margin-bottom: 2rem; /* Add this line */
+}
+
+
 /* Content Area */
 .profile-content {
     flex: 1;

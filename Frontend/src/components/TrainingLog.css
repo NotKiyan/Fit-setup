@@ -1,0 +1,88 @@
+/* Make sure this is imported in TrainingLog.jsx */
+.training-log-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.log-form {
+    border: 1px solid #eee;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    background: #fafafa;
+}
+
+.set-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.set-row span {
+    min-width: 50px;
+    font-size: 0.9rem;
+    color: #555;
+}
+.set-row input {
+    max-width: 120px;
+}
+.set-row .btn-icon-sm {
+    background: none;
+    border: none;
+    color: #cc0000;
+    cursor: pointer;
+    padding: 5px;
+}
+.set-row .btn-icon-sm:hover {
+    color: #ff0000;
+}
+.log-form .btn-sm {
+    font-size: 0.85rem;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+
+/* Log List */
+.log-list h4 {
+    margin-top: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.log-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.log-item-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+.log-item-header span {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.log-item-sets {
+    list-style: none;
+    padding-left: 1.5rem;
+    margin: 0 0 10px 0;
+}
+.log-item-sets li {
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.log-item p {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 5px 0 0 0;
+}

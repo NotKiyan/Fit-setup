@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavig
 import './App.css'; //
 import Layout from './components/Layout'; //
 import HomePage from './pages/HomePage.jsx'; //
-import UserProfile from './components/UserProfile'; //
+import UserProfile from './pages/UserProfile';
 import CartPage from './pages/CartPage.jsx'; //
 import BlogPage from './pages/BlogPage.jsx'; // Added
 import LoginPage from './components/LoginPage'; //
