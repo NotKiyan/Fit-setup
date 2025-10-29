@@ -29,6 +29,8 @@ app.use('/api/products', require('./routes/productRoutes')); //
 // --- ADD THESE LINES for exercises and training plans ---
 app.use('/api/exercises', require('./routes/exerciseRoutes')); // Assumes exerciseRoutes.js exists
 app.use('/api/trainingplans', require('./routes/trainingPlanRoutes')); // Assumes trainingPlanRoutes.js exists
+app.use('/api/workoutlog', require('./routes/workoutLogRoutes'));
+app.use('/api/progress', require('./routes/progressRoutes'));
 // --------------------------------------------------------
 
 // --- Server Initialization ---
