@@ -675,7 +675,7 @@ export default function ProfilePage({ user, setUser }) {
                 case 'trainingLog':
                     return <TrainingLog user={user} allExercises={allExercises} />;
                 case 'progress':
-                    return <ProgressAnalytics user={user} />;
+                    return <ProgressAnalytics user={user} allExercises={allExercises} />;
 
                 case 'orders': return ( <div className="profile-section"><div className="section-header"><h3>Order History</h3><p>Your past purchases.</p></div>{orders.length === 0 ? <p>No orders yet.</p> : <div>Display orders...</div>}</div> );
                 case 'wishlist': return ( <div className="profile-section"><div className="section-header"><h3>My Wishlist</h3><p>Your saved items.</p></div>{wishlist.length === 0 ? <p>Wishlist is empty.</p> : <div>Display wishlist...</div>}</div> );

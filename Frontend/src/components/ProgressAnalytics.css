@@ -1,0 +1,57 @@
+.progress-analytics-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.progress-widget {
+    border: 1px solid #eee;
+    padding: 1.5rem;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+.progress-widget h4 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+/* PR List Styling */
+.pr-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.pr-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 5px;
+    border-bottom: 1px solid #eee;
+}
+.pr-list li:last-child {
+    border-bottom: none;
+}
+.pr-list li strong {
+    font-size: 1.1rem;
+    color: #333;
+}
+
+/* Chart Widget Styling */
+.chart-widget .form-group {
+    margin-bottom: 1.5rem;
+}
+.chart-widget label {
+    margin-right: 10px;
+    font-weight: 500;
+}
+.chart-widget select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+}
