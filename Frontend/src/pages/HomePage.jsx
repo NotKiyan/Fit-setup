@@ -56,9 +56,24 @@ const HomePage = () => {
   ];
 
   const testimonials = [
-    { quote: "The quality from Fitsetup is unmatched. My home gym has never been better.", author: "Alex R." },
-    { quote: "Fast shipping and incredible customer service. They helped me choose the perfect rack.", author: "Maria S." },
-    { quote: "I've recommended Fitsetup to all my friends. The equipment is built to last.", author: "James L." },
+    {
+      quote: "The quality from Fitsetup is unmatched. My home gym has never been better.",
+      author: "Alex R.",
+      // Example image (Replace with actual non-copyright URL)
+      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    },
+    {
+      quote: "Fast shipping and incredible customer service. They helped me choose the perfect rack.",
+      author: "Maria S.",
+      // Example image (Replace with actual non-copyright URL)
+      image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    },
+    {
+      quote: "I've recommended Fitsetup to all my friends. The equipment is built to last.",
+      author: "James L.",
+      // Example image (Replace with actual non-copyright URL)
+      image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    },
   ];
 
   return (
@@ -120,6 +135,9 @@ const HomePage = () => {
     <div className="testimonials-grid">
     {testimonials.map((t, index) => (
       <div key={index} ref={addToRefs} className="fade-in-section testimonial-card" style={{ transitionDelay: `${index * 0.1}s` }}>
+      {/* --- Add image tag here --- */}
+      <img src={t.image} alt={`${t.author} testimonial`} className="testimonial-image" />
+      {/* --- End image tag --- */}
       <p className="testimonial-quote">"{t.quote}"</p>
       <p className="testimonial-author">- {t.author}</p>
       </div>

@@ -311,21 +311,50 @@ body {
 .product-price { font-size: 1rem; color: var(--accent-color); font-weight: 500; margin-bottom: 15px; }
 
 /* --- Testimonials Section --- */
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-}
+/* Add to App.css or HomePage.css */
 
 .testimonial-card {
-  background: var(--card-bg);
-  padding: 30px;
-  border-left: 4px solid var(--accent-color);
+  display: flex; /* Use flexbox for layout */
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Center items horizontally */
+  text-align: center;
+  padding: 1.5rem;
+  background-color: var(--card-bg, #f8f9fa);
   border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-height: 350px;
 }
-.testimonial-quote { font-style: italic; margin-bottom: 15px; }
-.testimonial-author { font-weight: 600; }
 
+.testimonial-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%; /* Make it circular */
+  object-fit: cover; /* Ensure image covers the space nicely */
+  margin-bottom: 1.25rem; /* Space below image */
+  border: 3px solid white; /* Optional: add a border */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: add shadow */
+}
+
+.testimonial-quote {
+  font-style: italic;
+  color: #555; /* Adjust color */
+  margin-bottom: 0.5rem;
+  flex-grow: 1; /* Allow quote to take available space */
+}
+
+.testimonial-author {
+  font-weight: bold;
+  color: #333; /* Adjust color */
+  margin-top: auto; /* Push author to the bottom */
+}
+
+/* Ensure grid layout still works */
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem; /* Adjust gap as needed */
+  margin-top: 2rem;
+}
 /* --- CTA Section --- */
 .cta-section {
   background-color: var(--accent-color);

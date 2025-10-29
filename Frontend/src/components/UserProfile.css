@@ -1,5 +1,90 @@
 /* ===== PROFILE PAGE STYLES ===== */
+.simple-profile-header {
+    position: fixed; /* Keep it fixed at the top */
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ffffff; /* White background */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    z-index: 1000; /* Ensure it's above other content */
+    height: 60px; /* Give it a height */
+    display: flex; /* Use flexbox to align items inside */
+    align-items: center; /* Center items vertically */
+    /* Ensure it has precedence over other potential header styles */
+    box-sizing: border-box;
+}
 
+.simple-profile-nav {
+    display: flex;
+    justify-content: space-between; /* Space out back button, logo, placeholder */
+    align-items: center; /* Center vertically */
+    width: 100%; /* Take full width */
+    max-width: 1200px; /* Optional: Limit max width like your main container */
+    margin: 0 auto; /* Center the nav content */
+    padding: 0 20px; /* Add some horizontal padding */
+    box-sizing: border-box;
+}
+
+/* Style for your logo/name */
+.simple-profile-logo {
+    font-size: 1.5rem; /* Adjust size */
+    font-weight: bold;
+    color: #333; /* Dark color for visibility */
+    text-decoration: none;
+    /* Make sure it's not hidden by other styles */
+    display: block;
+}
+
+.simple-profile-logo span {
+    /* Use your defined accent color if available, otherwise fallback */
+    color: var(--accent-color, #007bff);
+}
+
+
+/* Basic style for a back button */
+.back-button {
+    background: none;
+    border: none;
+    font-size: 1.8rem; /* Make arrow bigger */
+    line-height: 1; /* Adjust line height for better vertical alignment */
+    cursor: pointer;
+    color: #555; /* Visible color */
+    padding: 5px;
+    display: flex; /* Helps align arrow */
+    align-items: center;
+    justify-content: center;
+}
+.back-button:hover {
+    color: #000; /* Darker on hover */
+}
+
+/* Placeholder to help center the logo when using space-between */
+.nav-placeholder {
+    width: 30px; /* Roughly match the width of the back button */
+    height: 10px; /* Give it some height */
+    visibility: hidden; /* Make it invisible but take up space */
+}
+
+/* Adjust padding-top on the main profile container to prevent overlap */
+/* IMPORTANT: Ensure this rule correctly targets your main container */
+/* Make sure .profile-container exists and this rule isn't overridden */
+.profile-container {
+    /* ... your existing styles ... */
+    padding-top: 60px; /* Match the header height */
+    /* Remove fixed height if header pushes it down */
+    height: auto; /* Let content determine height */
+    min-height: calc(100vh - 60px); /* Ensure it fills at least the rest of the screen */
+}
+
+/* Adjust sidebar/content height IF they previously relied on 100vh */
+.profile-sidebar,
+.profile-content {
+    /* If header is fixed, sidebar/content need padding/margin at top */
+    /* Or adjust their height calculation */
+    height: calc(100vh - 60px); /* Recalculate height based on viewport minus header */
+    /* Ensure overflow-y: auto allows scrolling within these containers */
+    overflow-y: auto;
+}
 .profile-overlay {
     position: fixed;
     top: 0;
@@ -379,8 +464,50 @@
     cursor: pointer;
     transition: all 0;
 }
+.view-plan-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+.view-plan-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+.view-plan-item:last-child {
+    border-bottom: none;
+}
+.view-plan-item strong {
+    margin-right: 1rem; /* Space between name and details */
+}
+.view-plan-item span {
+    color: #555;
+    font-size: 0.9rem;
+}
+.back-to-list-btn {
+    margin-left: auto; /* Push button to the right in header */
+}
 
-/* ===== Additions for Personal Info Section ===== */
+/* Styles for Plan Card Actions (View/Edit/Delete buttons) */
+.plan-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+.plan-card-actions .btn-sm svg { /* Style icons inside buttons */
+    width: 14px;
+    height: 14px;
+    vertical-align: middle; /* Align icon with text if any */
+}
+
+/* --- You already have styles for the creator view --- */
+/* Add any specific tweaks for edit mode if needed */
+.training-plan-creator .section-header h3 {
+    /* Maybe slightly different margin */
+}
+
+
 
 /* Make radio buttons inline */
 .radio-group {
@@ -485,6 +612,263 @@
     overflow-y: auto;
     padding-bottom: 60px; /* Add padding at the bottom */
 }
+
+.profile-form .equipment-selection .equipment-subgroup {
+    margin-top: 1.5rem; /* Adjust this value as needed (e.g., 1rem, 2rem) */
+    padding-top: 1.5rem; /* Add padding to push content down from the border */
+    border-top: 1px solid #eee; /* Light grey border for separation */
+}
+.checkbox-group-columns {
+    /* Your existing column styles */
+    display: grid; /* Or flex, etc. */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Example */
+    gap: 0.5rem;
+}
+
+.checkbox-group-scroll {
+    max-height: 150px; /* Example height */
+    overflow-y: auto;
+    border: 1px solid #eee; /* Optional border */
+    padding: 0.5rem; /* Optional padding */
+    margin-top: 0.5rem; /* Space below h4 if you keep it */
+}
+
+
+
+/* --- Add to UserProfile.css --- */
+
+/* Initial Prompt Styles */
+.no-plans-prompt {
+    text-align: center;
+    padding: 3rem 1rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+}
+.no-plans-prompt p {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+.creation-options {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+}
+.btn-icon-large {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: var(--text-color);
+    min-width: 150px; /* Give buttons some width */
+}
+.btn-icon-large:hover {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+.btn-icon-large svg {
+    width: 32px;
+    height: 32px;
+}
+
+/* Plan Creation View Styles */
+.training-plan-creator .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+.plan-name-input {
+    flex-grow: 1; /* Allow input to take available space */
+    max-width: 400px; /* Limit input width */
+    margin-left: 2rem; /* Add space from header */
+}
+.plan-name-input label {
+    margin-right: 0.5rem;
+}
+.plan-name-input input {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+
+.creator-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.current-plan-section,
+.available-exercises-section {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    background-color: #fdfdfd;
+    display: flex; /* Use flexbox for vertical layout */
+    flex-direction: column; /* Stack vertically */
+}
+
+.current-plan-section h4,
+.available-exercises-section h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+/* Make lists scrollable */
+.current-plan-list,
+.available-exercises-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto; /* Enable vertical scroll */
+    flex-grow: 1; /* Allow list to take remaining space */
+    max-height: 400px; /* Limit height */
+    min-height: 200px; /* Ensure some minimum height */
+}
+
+.current-plan-item,
+.available-exercise-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+.current-plan-item:last-child,
+.available-exercise-item:last-child {
+    border-bottom: none;
+}
+
+.exercise-info {
+    flex-grow: 1;
+    margin-right: 1rem;
+}
+.exercise-info strong {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+.reps-time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+.reps-time-inputs input {
+    width: 100px; /* Adjust width */
+    padding: 4px 8px;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.reps-time-inputs span {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.action-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex; /* Align icon nicely */
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+.action-button svg {
+    width: 20px;
+    height: 20px;
+}
+.add-button svg { color: green; }
+.remove-button svg { color: red; }
+.action-button:hover {
+    background-color: #f0f0f0;
+}
+
+.empty-plan-text {
+    color: #888;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.plan-actions {
+    margin-top: 1.5rem; /* Space above buttons */
+    padding-top: 1.5rem; /* Space above buttons */
+    border-top: 1px solid #eee; /* Separator line */
+    display: flex;
+    gap: 1rem;
+}
+
+/* Displaying Saved Plans */
+.plans-list {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.plan-card {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.plan-card h5 {
+    margin: 0;
+    font-weight: 600;
+}
+.plan-card button {
+    margin-left: 0.5rem; /* Space between buttons */
+}
+.ai-plan-card {
+    border-left: 4px solid var(--accent-color); /* Highlight AI plan */
+}
+
+.add-plan-button {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    width: 100%; /* Make button full width */
+}
+.add-plan-button.ai-button {
+    border-style: dashed;
+}
+.add-plan-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Adjustments for responsive */
+@media (max-width: 900px) { /* Adjust breakpoint if needed */
+    .creator-layout {
+        grid-template-columns: 1fr; /* Stack columns on smaller screens */
+    }
+    .available-exercises-section {
+        max-height: 300px; /* Adjust height for stacked layout */
+    }
+}
+
+/* --- End Additions --- */
 
 
 /* Responsive adjustments might be needed */
