@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+model Exercise {
+  id           Int       @id @default(autoincrement())
+  name         String
+  category     Category   @default(GENERAL)
+  type         ExerciseType?
+  equipment    String?    // e.g. "Barbell", "Dumbbell", "Bodyweight"
+  muscleGroup  MuscleGroup?
+  difficulty   Difficulty? @default(MEDIUM)
+  instructions String?
+  imageUrl     String?
+  videoUrl     String?
+  createdAt    DateTime   @default(now())
+}
+
+enum Category {
+  STRENGTH
+  CARDIO
+  FLEXIBILITY
+  FUNCTIONAL
+  GENERAL
+  CORE
+}
+
+enum ExerciseType {
+  MACHINE
+  FREE_WEIGHT
+  BODYWEIGHT
+  RESISTANCE_BAND
+}
+
+enum MuscleGroup {
+  CHEST
+  BACK
+  SHOULDERS
+  LEGS
+  ARMS
+  CORE
+  FULL_BODY
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+

@@ -3,34 +3,46 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
+const connectDB = require('./config/db'); // Ensure this path is correct
+const prisma = require('./config/prismaClient'); // Assuming you have this for Prisma
 
 // Initialize Express app
 const app = express();
 
-// Connect to the database
+// Connect to MongoDB Database
 connectDB();
 
 // --- Middleware ---
-// Enable Cross-Origin Resource Sharing (CORS)
-// This allows your React frontend (running on a different port) to communicate with the backend
-app.use(cors());
-
-// Enable Express to parse JSON in the request body
-app.use(express.json());
-
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Body parser for JSON
 
 // --- API Routes ---
-// Define a basic route to confirm the server is running
 app.get('/', (req, res) => res.send('Fitsetup API is running...'));
 
-// Mount the authentication routes
-app.use('/api/auth', require('./routes/auth'));
+// Mount existing routes
+app.use('/api/auth', require('./routes/auth')); //
+app.use('/api/users', require('./routes/userRoutes')); //
+app.use('/api/admin', require('./routes/adminRoutes')); //
+// Assuming you have a product routes file, ensure it's mounted
+app.use('/api/products', require('./routes/productRoutes')); //
 
-// Mount the user routes
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
+// --- ADD THESE LINES for exercises and training plans ---
+app.use('/api/exercises', require('./routes/exerciseRoutes')); // Assumes exerciseRoutes.js exists
+app.use('/api/trainingplans', require('./routes/trainingPlanRoutes')); // Assumes trainingPlanRoutes.js exists
+// --------------------------------------------------------
+
 // --- Server Initialization ---
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+
+// --- Optional: Prisma Client Shutdown ---
+async function shutdown() {
+    if(prisma) { // Check if prisma client exists before disconnecting
+        await prisma.$disconnect();
+        console.log('Prisma client disconnected.');
+    }
+    process.exit(0);
+}
+process.on('SIGINT', shutdown); // Handle Ctrl+C
+process.on('SIGTERM', shutdown); // Handle termination signals
