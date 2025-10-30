@@ -85,6 +85,42 @@ router.get('/prs', protect, async (req, res) => {
     }
 });
 
+// --- GET /api/progress/consistency ---
+// Returns a list of dates the user has logged a workout
+router.get('/consistency', protect, async (req, res) => {
+    try {
+        // Find all workouts for the user
+        const workouts = await WorkoutLog.find({
+            userId: new mongoose.Types.ObjectId(req.user.id)
+        })
+        .select('date'); // Only select the date field
+
+        if (!workouts || workouts.length === 0) {
+            return res.status(404).json({ msg: 'No workout data found' });
+        }
+
+        // We need to format the data for the heatmap: [{ date: 'YYYY-MM-DD', count: 1 }]
+        // We use a Set to only count each day once, even if multiple workouts were logged
+        const dates = new Set();
+        workouts.forEach(workout => {
+            // Format date as 'YYYY-MM-DD'
+            dates.add(workout.date.toISOString().split('T')[0]);
+        });
+
+        // Convert the Set of unique dates into the array format the heatmap needs
+        const heatmapData = Array.from(dates).map(dateStr => ({
+            date: dateStr,
+            count: 1 // We'll just count 1 for "worked out"
+        }));
+
+        res.json(heatmapData);
+
+    } catch (error) {
+        console.error('Error fetching consistency data:', error);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
 // We can add routes for /volume and /consistency later in a similar way
 
 console.log('--- progressRoutes.js loaded ---');

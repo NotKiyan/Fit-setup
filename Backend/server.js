@@ -31,6 +31,8 @@ app.use('/api/exercises', require('./routes/exerciseRoutes')); // Assumes exerci
 app.use('/api/trainingplans', require('./routes/trainingPlanRoutes')); // Assumes trainingPlanRoutes.js exists
 app.use('/api/workoutlog', require('./routes/workoutLogRoutes'));
 app.use('/api/progress', require('./routes/progressRoutes'));
+app.use('/api/dietanalysis', require('./routes/dietAnalysisRoutes'));
+app.use('/api/dietlog', require('./routes/dietRoutes'));
 // --------------------------------------------------------
 
 // --- Server Initialization ---
