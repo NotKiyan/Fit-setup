@@ -1,0 +1,104 @@
+.diet-tracker h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    color: var(--accent-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.weight-goals {
+    background-color: var(--bg-color);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+.weight-goals h4 {
+    margin-top: 0;
+    border-bottom: none; /* No border for this heading */
+}
+.weight-goals p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: #333;
+}
+.weight-goals strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.calorie-entry-form {
+    background-color: #fdfdfd;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+.calorie-entry-form h4 {
+    margin-top: 0;
+}
+
+.diet-summary {
+    margin-bottom: 2rem;
+}
+.diet-summary h5 {
+    font-size: 1rem;
+    color: #444;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Style the recharts container if needed */
+.recharts-responsive-container {
+    margin-top: 1rem;
+}
+
+.diet-log-history {
+    margin-top: 2rem;
+}
+
+.diet-log-history h4 {
+    /* Your existing h4 styles */
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    color: var(--accent-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+.diet-log-history ul {
+    list-style: none;
+    padding: 0;
+    margin: 0; /* Add this */
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: #fff; /* Add a background */
+}
+.diet-log-history li {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+}
+.diet-log-history li:last-child {
+    border-bottom: none;
+}
+.diet-log-history span:first-child {
+    color: #555;
+    font-weight: 500; /* Make date slightly bolder */
+}
+
+.diet-log-history span:last-child {
+    font-weight: 600;
+    color: #333; /* Darken text */
+}
+.diet-log-history p {
+    padding: 20px;
+    text-align: center;
+    color: #777;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}

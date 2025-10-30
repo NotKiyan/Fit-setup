@@ -55,3 +55,34 @@
     border: 1px solid #ccc;
     font-size: 1rem;
 }
+
+/* ... (your existing .progress-widget, .pr-list, etc. styles) ... */
+
+/* --- Heatmap Styles --- */
+.heatmap-widget {
+    /* This makes the heatmap horizontal */
+    overflow-x: auto;
+    padding: 1.5rem 2rem; /* Add more horizontal padding */
+}
+
+/* This targets the SVG component from the library */
+.react-calendar-heatmap {
+    min-width: 700px; /* Force a min-width to see more months */
+}
+
+.react-calendar-heatmap .color-empty {
+    fill: #ebedf0;
+}
+.react-calendar-heatmap .color-scale-1 {
+    fill: #9be9a8;
+}
+/* You can add more levels here if you count more than 1 workout */
+.react-calendar-heatmap .color-scale-2 {
+    fill: #40c463;
+}
+.react-calendar-heatmap .color-scale-3 {
+    fill: #30a14e;
+}
+.react-calendar-heatmap .color-scale-4 {
+    fill: #216e39;
+}

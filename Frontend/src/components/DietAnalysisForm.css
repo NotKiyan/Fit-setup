@@ -1,0 +1,106 @@
+.diet-analysis-form h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    color: var(--accent-color);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.diet-analysis-form .form-row {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive columns */
+}
+
+/* Vertical radio/checkbox groups */
+.radio-group-vertical,
+.checkbox-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Space between options */
+}
+.radio-group-vertical p,
+.checkbox-group-vertical > label:first-child { /* Target the main label */
+    font-weight: 600;
+    margin-bottom: 8px; /* Space below question */
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.radio-group-vertical label,
+.checkbox-group-vertical label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal; /* Normal weight for options */
+    cursor: pointer;
+}
+.radio-group-vertical input[type="radio"],
+.checkbox-group-vertical input[type="checkbox"] {
+    margin-right: 5px; /* Space between input and text */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+.checkbox-group-vertical input[type="text"] {
+    display: inline-block; /* Allow text input next to "Other:" */
+    width: auto; /* Size based on content or 'size' attribute */
+    margin-left: 5px;
+}
+
+
+/* Meal Log Table */
+.table-container {
+    overflow-x: auto; /* Allow horizontal scrolling on small screens */
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+.meal-log-table {
+    width: 100%;
+    min-width: 600px; /* Prevent table from becoming too narrow */
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+}
+.meal-log-table th,
+.meal-log-table td {
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+}
+.meal-log-table th {
+    background-color: var(--bg-color);
+    font-weight: 600;
+}
+.meal-log-table td input[type="text"] {
+    width: 100%;
+    border: none;
+    padding: 4px;
+    font-size: inherit; /* Inherit font size from table cell */
+    background-color: transparent; /* Blend with cell background */
+}
+.meal-log-table td input[type="text"]:focus {
+    outline: 1px solid var(--accent-color); /* Highlight on focus */
+    background-color: #fff;
+}
+
+.diet-analysis-form textarea {
+    min-height: 80px; /* Give textareas a decent height */
+    width: 100%; /* Ensure textareas take full width */
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+/* Optional section divider */
+.section-divider {
+    margin: 2.5rem 0;
+    border: none;
+    border-top: 1px dashed var(--border-color);
+}

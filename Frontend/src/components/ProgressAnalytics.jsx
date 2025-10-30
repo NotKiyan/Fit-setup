@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import './ProgressAnalytics.css'; // We will create this file
+import CalendarHeatmap from 'react-calendar-heatmap';
+import './ProgressAnalytics.css';
+import 'react-calendar-heatmap/dist/styles.css';
 
 export default function ProgressAnalytics({ user, allExercises }) {
     const [prs, setPrs] = useState([]);
@@ -9,6 +11,9 @@ export default function ProgressAnalytics({ user, allExercises }) {
     const [isLoadingPRs, setIsLoadingPRs] = useState(true);
     const [isLoadingChart, setIsLoadingChart] = useState(false);
     const [error, setError] = useState('');
+    const [consistencyData, setConsistencyData] = useState([]);
+    const [isLoadingConsistency, setIsLoadingConsistency] = useState(true);
+    const CONSISTENCY_API_URL = 'http://localhost:5000/api/progress/consistency';
 
     const PR_API_URL = 'http://localhost:5000/api/progress/prs';
     const STRENGTH_API_URL = 'http://localhost:5000/api/progress/strength';
@@ -36,7 +41,30 @@ export default function ProgressAnalytics({ user, allExercises }) {
                 setIsLoadingPRs(false);
             }
         };
+        const fetchConsistency = async () => {
+            if (!user?.token) return;
+            setIsLoadingConsistency(true);
+            try {
+                const response = await fetch(CONSISTENCY_API_URL, {
+                    headers: { 'Authorization': `Bearer ${user.token}` }
+                });
+                if (response.status === 404) {
+                    setConsistencyData([]);
+                } else if (response.ok) {
+                    const data = await response.json();
+                    setConsistencyData(data);
+                } else {
+                    throw new Error('Failed to fetch consistency data');
+                }
+            } catch (err) {
+                setError(err.message); // You can re-use the existing error state
+            } finally {
+                setIsLoadingConsistency(false);
+            }
+        };
+
         fetchPRs();
+        fetchConsistency(); // <-- 6. CALL THE NEW FUNCTION
     }, [user]);
 
     // --- 2. Fetch Strength Data when an exercise is selected ---
@@ -70,6 +98,18 @@ export default function ProgressAnalytics({ user, allExercises }) {
             setIsLoadingChart(false);
         }
     };
+
+
+    const getHeatmapDateRange = () => {
+        const endDate = new Date(); // Today
+        const startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - 6); // Show last 6 months
+        return {
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0]
+        };
+    };
+    const { startDate, endDate } = getHeatmapDateRange();
 
     return (
         <div className="profile-section progress-analytics-section">
@@ -133,6 +173,33 @@ export default function ProgressAnalytics({ user, allExercises }) {
 
             {!isLoadingChart && strengthData.length === 0 && selectedExerciseId && (
                 <p>No weight-based logs found for this exercise.</p>
+            )}
+            </div>
+
+            {/* --- Heatmap Widget (MOVED TO BE OUTSIDE) --- */}
+            <div className="progress-widget heatmap-widget">
+            <h4>Workout Consistency (Last 6 Months)</h4>
+            {isLoadingConsistency ? (
+                <p>Loading consistency map...</p>
+            ) : (
+                <CalendarHeatmap
+                startDate={startDate}
+                endDate={endDate}
+                values={consistencyData}
+                classForValue={(value) => {
+                    if (!value) {
+                        return 'color-empty';
+                    }
+                    // This counts as a "level 1" block
+                    return `color-scale-1`;
+                }}
+                tooltipDataAttrs={value => {
+                    if (!value || !value.date) {
+                        return { 'data-tip': 'No workout' };
+                    }
+                    return { 'data-tip': `Worked out on ${value.date}` };
+                }}
+                />
             )}
             </div>
             </div>
