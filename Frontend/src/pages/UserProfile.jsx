@@ -49,6 +49,10 @@ export default function ProfilePage({ user, setUser }) {
     const [accountDetails, setAccountDetails] = useState({ first_name: '', last_name: '', phone_number: '' });
     const [address, setAddress] = useState({ street: '', city: '', zip_code: '' });
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+
+    // **MODIFIED** Added new state for Personal Info editing
+    const [isEditingPersonalInfo, setIsEditingPersonalInfo] = useState(false);
+    const [originalPersonalInfo, setOriginalPersonalInfo] = useState(null); // For cancellation
     const [personalInfo, setPersonalInfo] = useState({
         gender: '', equipmentUse: [], equipmentSelect: { freeWeights: [], machines: [], benchRack: [], cardio: [] },
         workoutFrequency: '', mainGoal: '', workoutPriorities: [], height: '', currentWeight: '', targetWeight: '',
@@ -59,7 +63,7 @@ export default function ProfilePage({ user, setUser }) {
     const [trainingPlans, setTrainingPlans] = useState([]);
     const [allExercises, setAllExercises] = useState([]);
     const [viewMode, setViewMode] = useState('list'); // 'list', 'create', 'view', 'edit'
-    const [selectedPlan, setSelectedPlan] = useState(null); // Plan object for viewing/editing
+    const [selectedPlan, setSelectedPlan] = useState(null);
     const [currentPlanName, setCurrentPlanName] = useState('');
     const [currentPlanExercises, setCurrentPlanExercises] = useState([]);
     const [availableExercises, setAvailableExercises] = useState([]);
@@ -85,7 +89,7 @@ export default function ProfilePage({ user, setUser }) {
             if (!isMounted) return;
             setApiError('');
             setIsLoadingData(true);
-            setIsLoadingExercises(true); // Start exercise loading
+            setIsLoadingExercises(true);
 
             try {
                 // --- OPTIMIZATION: Run fetches in parallel ---
@@ -108,20 +112,23 @@ export default function ProfilePage({ user, setUser }) {
                     throw new Error(`Profile fetch failed: ${profileResponse.statusText}`);
                 }
                 const profileData = await profileResponse.json();
-                if (!isMounted) return; // Check mount status after await
+                if (!isMounted) return;
 
                 setAccountDetails({ first_name: profileData.first_name || '', last_name: profileData.last_name || '', phone_number: profileData.phone_number || '' });
                 setAddress({ street: profileData.shipping_address?.street || '', city: profileData.shipping_address?.city || '', zip_code: profileData.shipping_address?.zip_code || '' });
 
                 const pi = profileData.personalInfo || {};
-                setPersonalInfo({
+                // **NEW** Create a clean data object for both original and editable state
+                const pi_data = {
                     gender: pi.gender || '', equipmentUse: Array.isArray(pi.equipmentUse) ? pi.equipmentUse : [],
-                                equipmentSelect: { freeWeights: Array.isArray(pi.equipmentSelect?.freeWeights) ? pi.equipmentSelect.freeWeights : [], machines: Array.isArray(pi.equipmentSelect?.machines) ? pi.equipmentSelect.machines : [], benchRack: Array.isArray(pi.equipmentSelect?.benchRack) ? pi.equipmentSelect.benchRack : [], cardio: Array.isArray(pi.equipmentSelect?.cardio) ? pi.equipmentSelect.cardio : [] },
-                                workoutFrequency: pi.workoutFrequency || '', mainGoal: pi.mainGoal || '', workoutPriorities: Array.isArray(pi.workoutPriorities) ? pi.workoutPriorities : [],
-                                height: pi.height || '', currentWeight: pi.currentWeight || '', targetWeight: pi.targetWeight || '', hasInjuries: pi.hasInjuries || '',
-                                injuredAreas: Array.isArray(pi.injuredAreas) ? pi.injuredAreas : [], trainingExperience: pi.trainingExperience || '', wantsHomeGym: pi.wantsHomeGym || '',
-                                roomSpecs: { width: pi.roomSpecs?.width || '', height: pi.roomSpecs?.height || '', depth: pi.roomSpecs?.depth || '' },
-                });
+              equipmentSelect: { freeWeights: Array.isArray(pi.equipmentSelect?.freeWeights) ? pi.equipmentSelect.freeWeights : [], machines: Array.isArray(pi.equipmentSelect?.machines) ? pi.equipmentSelect.machines : [], benchRack: Array.isArray(pi.equipmentSelect?.benchRack) ? pi.equipmentSelect.benchRack : [], cardio: Array.isArray(pi.equipmentSelect?.cardio) ? pi.equipmentSelect.cardio : [] },
+              workoutFrequency: pi.workoutFrequency || '', mainGoal: pi.mainGoal || '', workoutPriorities: Array.isArray(pi.workoutPriorities) ? pi.workoutPriorities : [],
+              height: pi.height || '', currentWeight: pi.currentWeight || '', targetWeight: pi.targetWeight || '', hasInjuries: pi.hasInjuries || '',
+              injuredAreas: Array.isArray(pi.injuredAreas) ? pi.injuredAreas : [], trainingExperience: pi.trainingExperience || '', wantsHomeGym: pi.wantsHomeGym || '',
+              roomSpecs: { width: pi.roomSpecs?.width || '', height: pi.roomSpecs?.height || '', depth: pi.roomSpecs?.depth || '' },
+                };
+                setPersonalInfo(pi_data);
+                setOriginalPersonalInfo(pi_data); // **NEW** Save the original copy
 
                 // --- 2. Process Training Plans Response ---
                 if (!plansResponse.ok && plansResponse.status !== 404) {
@@ -148,7 +155,7 @@ export default function ProfilePage({ user, setUser }) {
             } finally {
                 if (isMounted) {
                     setIsLoadingData(false);
-                    setIsLoadingExercises(false); // Stop exercise loading
+                    setIsLoadingExercises(false);
                 }
             }
         };
@@ -198,20 +205,20 @@ export default function ProfilePage({ user, setUser }) {
         });
     };
 
-    // --- Training Plan Handlers ---
+    // --- Training Plan Handlers (Unchanged) ---
     const handleStartCreatePlan = () => {
         const manualPlans = trainingPlans.filter(p => !p.isAIPlan);
         if (manualPlans.length >= 2) { setApiError("Max 2 manual plans allowed."); setTimeout(() => setApiError(''), 3000); return; }
         setCurrentPlanName(`My Plan ${manualPlans.length + 1}`);
         setCurrentPlanExercises([]);
         setAvailableExercises(allExercises);
-        setSelectedPlan(null); // Clear selected plan
-        setViewMode('create'); // Switch view mode
+        setSelectedPlan(null);
+        setViewMode('create');
         setActiveSection('trainingPlans');
     };
 
-    const handleCancelCreateOrEdit = () => { // Renamed for clarity
-        setViewMode('list'); // Go back to the list
+    const handleCancelCreateOrEdit = () => {
+        setViewMode('list');
         setSelectedPlan(null);
         setCurrentPlanExercises([]);
         setCurrentPlanName('');
@@ -238,10 +245,10 @@ export default function ProfilePage({ user, setUser }) {
             planName: currentPlanName || 'My Training Plan',
             isAIPlan: false,
             exercises: currentPlanExercises.map(ex => ({
-                exerciseId: ex.exerciseId, // This is the numeric ID from Prisma
+                exerciseId: ex.exerciseId,
                 name: ex.name,
-                reps: ex.reps, // Send as string
-                time: ex.time  // Send as string
+                reps: ex.reps,
+                time: ex.time
             }))
         };
         try {
@@ -249,42 +256,38 @@ export default function ProfilePage({ user, setUser }) {
             const savedPlan = await response.json();
             if (!response.ok) { if (response.status === 401 || response.status === 403) {setUser(null); navigate('/login');} throw new Error(savedPlan.msg || `Save failed: ${response.statusText}`); }
             setTrainingPlans(prev => [...prev, savedPlan]);
-            setViewMode('list'); // Go back to list after saving
+            setViewMode('list');
             setCurrentPlanExercises([]); setCurrentPlanName('');
             showSuccess('Plan saved!');
         } catch (err) { setApiError(`Error saving plan: ${err.message}`); console.error("Save plan error:", err); }
         finally { setIsSavingPlan(false); }
     };
 
-    // --- NEW: View Plan Handler ---
     const handleViewPlan = (planToView) => {
         setSelectedPlan(planToView);
         setViewMode('view');
-        setActiveSection('trainingPlans'); // Ensure correct section is active
+        setActiveSection('trainingPlans');
     };
 
-    // --- NEW: Edit Plan Handler ---
     const handleEditPlan = (planToEdit) => {
-        setSelectedPlan(planToEdit); // Store the original plan
+        setSelectedPlan(planToEdit);
         setCurrentPlanName(planToEdit.planName || '');
         const editableExercises = planToEdit.exercises.map(ex => ({
-            exerciseId: ex.exerciseId, // Already correct numeric ID
+            exerciseId: ex.exerciseId,
             name: ex.name || 'Unknown Exercise',
             reps: ex.reps || '',
             time: ex.time || '',
         }));
         setCurrentPlanExercises(editableExercises);
         setAvailableExercises(allExercises.filter(ex => !editableExercises.some(pEx => pEx.exerciseId === ex.id)));
-        setViewMode('edit'); // Switch to edit mode
+        setViewMode('edit');
         setActiveSection('trainingPlans');
     };
 
-    // --- NEW: Update Plan Handler (Save Edits) ---
     const handleUpdatePlan = async () => {
         if (!user?.token || !selectedPlan?._id) return;
         if (currentPlanExercises.length === 0) { setApiError("Add at least one exercise."); setTimeout(() => setApiError(''), 3000); return; }
         setApiError(''); setIsSavingPlan(true);
-
         const planDataToSend = {
             planName: currentPlanName || selectedPlan.planName,
             isAIPlan: selectedPlan.isAIPlan,
@@ -292,7 +295,6 @@ export default function ProfilePage({ user, setUser }) {
                 exerciseId: ex.exerciseId, name: ex.name, reps: ex.reps, time: ex.time
             }))
         };
-
         try {
             const response = await fetch(`${PLAN_API_BASE_URL}/${selectedPlan._id}`, {
                 method: 'PUT',
@@ -315,31 +317,25 @@ export default function ProfilePage({ user, setUser }) {
         }
     };
 
-    // --- NEW: Delete Plan Handler ---
     const handleDeletePlan = async (planToDelete) => {
         if (!window.confirm(`Are you sure you want to delete "${planToDelete.planName || 'this plan'}"?`)) {
             return;
         }
         if (!user?.token || !planToDelete?._id) return;
         setApiError('');
-        // Use the main data loader since it shows "Loading..."
         setIsLoadingData(true);
-
         try {
             const response = await fetch(`${PLAN_API_BASE_URL}/${planToDelete._id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${user.token}` },
             });
-
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {setUser(null); navigate('/login'); return;}
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.msg || `Delete failed: ${response.statusText}`);
             }
-
             setTrainingPlans(prev => prev.filter(p => p._id !== planToDelete._id));
             showSuccess('Plan deleted successfully!');
-
             if (selectedPlan?._id === planToDelete._id) {
                 setViewMode('list');
                 setSelectedPlan(null);
@@ -347,16 +343,15 @@ export default function ProfilePage({ user, setUser }) {
         } catch (err) {
             setApiError(`Error deleting plan: ${err.message}`); console.error("Delete plan error:", err);
         } finally {
-            setIsLoadingData(false); // Stop main loader
+            setIsLoadingData(false);
         }
     };
-
 
     const handleAICreatePlan = () => { alert("AI Plan generation coming soon!"); };
     // --- END Training Plan Handlers ---
 
 
-    // --- API Submission Handlers (Account, Address, Password, PersonalInfo) ---
+    // --- API Submission Handlers (Account, Address, Password) ---
     const handleDetailsSubmit = async (e) => {
         e.preventDefault(); if (!user?.token) return; setApiError('');
         try {
@@ -371,7 +366,6 @@ export default function ProfilePage({ user, setUser }) {
     const handleAddressSubmit = async (e) => {
         e.preventDefault(); if (!user?.token) return; setApiError('');
         try {
-            // This route seems to update both details and address, which is fine
             const response = await fetch(`${USER_API_BASE_URL}/profile`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` }, body: JSON.stringify({ first_name: accountDetails.first_name, last_name: accountDetails.last_name, phone_number: accountDetails.phone_number, shipping_address: address }) });
             const data = await response.json();
             if (!response.ok) { if (response.status === 401 || response.status === 403) {setUser(null); navigate('/login');} throw new Error(data.msg || `HTTP error! ${response.status}`); }
@@ -393,12 +387,11 @@ export default function ProfilePage({ user, setUser }) {
         } catch (err) { setApiError(`Update error: ${err.message}`); console.error("Update password error:", err); }
     };
 
+    // --- **MODIFIED** Personal Info Submit ---
     const handlePersonalInfoSubmit = async (e) => {
         e.preventDefault();
         if (!user?.token) return;
         setApiError('');
-
-        // FIX: Clean data before sending
         const dataToSend = {
             ...personalInfo,
             height: personalInfo.height ? Number(personalInfo.height) : null,
@@ -411,16 +404,14 @@ export default function ProfilePage({ user, setUser }) {
                 depth: personalInfo.roomSpecs.depth ? Number(personalInfo.roomSpecs.depth) : null,
             }
         };
-        // END FIX
 
         try {
             const response = await fetch(`${USER_API_BASE_URL}/profile/personal`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` },
-                body: JSON.stringify(dataToSend) // Use cleaned data
+                body: JSON.stringify(dataToSend)
             });
             const data = await response.json();
-
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
                     setUser(null); navigate('/login');
@@ -428,29 +419,40 @@ export default function ProfilePage({ user, setUser }) {
                 throw new Error(data.msg || `HTTP error! ${response.status}`);
             }
 
-            if (data) { // Update state from backend response
-                setPersonalInfo({
+            if (data) {
+                // **MODIFIED** Update both states
+                const pi_data = {
                     gender: data.gender || '',
                     equipmentUse: Array.isArray(data.equipmentUse) ? data.equipmentUse : [],
-                                equipmentSelect: { freeWeights: Array.isArray(data.equipmentSelect?.freeWeights) ? data.equipmentSelect.freeWeights : [], machines: Array.isArray(data.equipmentSelect?.machines) ? data.equipmentSelect.machines : [], benchRack: Array.isArray(data.equipmentSelect?.benchRack) ? data.equipmentSelect.benchRack : [], cardio: Array.isArray(data.equipmentSelect?.cardio) ? data.equipmentSelect.cardio : [] },
-                                workoutFrequency: data.workoutFrequency || '',
-                                mainGoal: data.mainGoal || '',
-                                workoutPriorities: Array.isArray(data.workoutPriorities) ? data.workoutPriorities : [],
-                                height: data.height || '',
-                                currentWeight: data.currentWeight || '',
-                                targetWeight: data.targetWeight || '',
-                                hasInjuries: data.hasInjuries || '',
-                                injuredAreas: Array.isArray(data.injuredAreas) ? data.injuredAreas : [],
-                                trainingExperience: data.trainingExperience || '',
-                                wantsHomeGym: data.wantsHomeGym || '',
-                                roomSpecs: { width: data.roomSpecs?.width || '', height: data.roomSpecs?.height || '', depth: data.roomSpecs?.depth || '' }
-                });
+                    equipmentSelect: { freeWeights: Array.isArray(data.equipmentSelect?.freeWeights) ? data.equipmentSelect.freeWeights : [], machines: Array.isArray(data.equipmentSelect?.machines) ? data.equipmentSelect.machines : [], benchRack: Array.isArray(data.equipmentSelect?.benchRack) ? data.equipmentSelect.benchRack : [], cardio: Array.isArray(data.equipmentSelect?.cardio) ? data.equipmentSelect.cardio : [] },
+                    workoutFrequency: data.workoutFrequency || '',
+                    mainGoal: data.mainGoal || '',
+                    workoutPriorities: Array.isArray(data.workoutPriorities) ? data.workoutPriorities : [],
+                    height: data.height || '',
+                    currentWeight: data.currentWeight || '',
+                    targetWeight: data.targetWeight || '',
+                    hasInjuries: data.hasInjuries || '',
+                    injuredAreas: Array.isArray(data.injuredAreas) ? data.injuredAreas : [],
+                    trainingExperience: data.trainingExperience || '',
+                    wantsHomeGym: data.wantsHomeGym || '',
+                    roomSpecs: { width: data.roomSpecs?.width || '', height: data.roomSpecs?.height || '', depth: data.roomSpecs?.depth || '' }
+                };
+                setPersonalInfo(pi_data);
+                setOriginalPersonalInfo(pi_data); // **NEW** Set new original data
             }
             showSuccess('Personal info saved!');
+            setIsEditingPersonalInfo(false); // **NEW** Exit edit mode
         } catch (err) {
             setApiError(`Save error: ${err.message}`);
             console.error("Save personal info error:", err);
         }
+    };
+
+    // --- **NEW** Handle Cancel Edit for Personal Info ---
+    const handleCancelPersonalInfoEdit = () => {
+        setPersonalInfo(originalPersonalInfo); // Revert to original data
+        setIsEditingPersonalInfo(false); // Exit edit mode
+        setApiError(''); // Clear errors
     };
 
 
@@ -470,6 +472,7 @@ export default function ProfilePage({ user, setUser }) {
 
         switch (activeSection) {
             case 'details':
+                // (This section is unchanged, user didn't ask to modify it)
                 return (
                     <div className="profile-section">
                     <div className="section-header"><h3>Account Details</h3><p>Manage personal info.</p></div>
@@ -486,11 +489,24 @@ export default function ProfilePage({ user, setUser }) {
                     </div>
                 );
             case 'personalInfo':
+                // **MODIFIED** This is the section you asked to change
                 return (
                     <div className="profile-section">
-                    <div className="section-header"><h3>Personal Information</h3><p>Help us tailor experience.</p></div>
+                    <div className="section-header">
+                    <h3>Personal Information</h3>
+                    <p>Help us tailor experience.</p>
+                    {/* --- NEW EDIT BUTTON --- */}
+                    {!isEditingPersonalInfo && (
+                        <button className="btn btn-edit" onClick={() => setIsEditingPersonalInfo(true)}>
+                        <EditIcon /> Edit
+                        </button>
+                    )}
+                    </div>
                     {apiError && <div className="error-message">{apiError}</div>}
+
                     <form className="profile-form personal-info-form" onSubmit={handlePersonalInfoSubmit}>
+                    {/* --- NEW FIELDSET: Disables form when not editing --- */}
+                    <fieldset disabled={!isEditingPersonalInfo}>
                     {/* --- Q1: Gender --- */}
                     <div className="form-group"><label>Gender</label><div className="radio-group"><label><input type="radio" name="gender" value="male" checked={personalInfo.gender === 'male'} onChange={handlePersonalInfoChange} /> Male</label><label><input type="radio" name="gender" value="female" checked={personalInfo.gender === 'female'} onChange={handlePersonalInfoChange} /> Female</label></div></div>
                     {/* --- Q2: Equipment Use --- */}
@@ -520,204 +536,210 @@ export default function ProfilePage({ user, setUser }) {
                         <div className="form-group"><label>Need home gym setup?</label><div className="radio-group"><label><input type="radio" name="wantsHomeGym" value="yes" checked={personalInfo.wantsHomeGym === 'yes'} onChange={handlePersonalInfoChange} /> Yes</label><label><input type="radio" name="wantsHomeGym" value="no" checked={personalInfo.wantsHomeGym === 'no'} onChange={handlePersonalInfoChange} /> No</label></div></div>
                         {/* --- Q13: Room Specs --- */}
                         {personalInfo.wantsHomeGym === 'yes' && (<div className="form-group"><label>Room Specs (m)</label><div className="form-row"><div className="form-group"><input type="number" name="roomSpecs.width" value={personalInfo.roomSpecs.width} onChange={handlePersonalInfoChange} placeholder="Width"/></div><div className="form-group"><input type="number" name="roomSpecs.height" value={personalInfo.roomSpecs.height} onChange={handlePersonalInfoChange} placeholder="Height"/></div></div><div className="form-group" style={{marginTop:'1rem'}}><input type="number" name="roomSpecs.depth" value={personalInfo.roomSpecs.depth} onChange={handlePersonalInfoChange} placeholder="Depth"/></div></div>)}
-                        <button type="submit" className="btn btn-primary">Save Personal Info</button>
+                        </fieldset>
+
+                        {/* --- NEW CONDITIONAL BUTTONS --- */}
+                        {isEditingPersonalInfo && (
+                            <div className="form-actions">
+                            <button type="submit" className="btn btn-primary">Save Changes</button>
+                            <button type="button" className="btn btn-secondary" onClick={handleCancelPersonalInfoEdit}>
+                            Cancel
+                            </button>
+                            </div>
+                        )}
                         </form>
                         </div>
                 );
 
                 // --- REVISED Training Plans Case with View/Edit Modes ---
-            case 'trainingPlans':
-                // VIEW MODE
-                if (viewMode === 'view' && selectedPlan) {
-                    return (
-                        <div className="profile-section">
-                        <div className="section-header">
-                        <h3>{selectedPlan.planName || 'Training Plan'}</h3>
-                        <button onClick={() => setViewMode('list')} className="btn btn-sm btn-secondary back-to-list-btn">
-                        &larr; Back to Plans
-                        </button>
-                        </div>
-                        {selectedPlan.exercises && selectedPlan.exercises.length > 0 ? (
-                            <ul className="view-plan-list">
-                            {selectedPlan.exercises.map((ex, index) => (
-                                <li key={ex.exerciseId || index} className="view-plan-item">
-                                <strong>{ex.name || 'Unknown Exercise'}</strong>
-                                <span>{ex.reps && `Reps: ${ex.reps}`}{ex.reps && ex.time && ' / '}{ex.time && `Time: ${ex.time}`}</span>
-                                </li>
-                            ))}
-                            </ul>
-                        ) : (
-                            <p>This plan has no exercises.</p>
-                        )}
-                        <div className="plan-actions" style={{marginTop: '1.5rem'}}>
-                        <button onClick={() => handleEditPlan(selectedPlan)} className="btn btn-edit">
-                        <EditIcon /> Edit
-                        </button>
-                        <button onClick={() => handleDeletePlan(selectedPlan)} className="btn btn-delete">
-                        <TrashIcon /> Delete
-                        </button>
-                        </div>
-                        </div>
-                    );
-                }
-
-                // CREATE OR EDIT MODE
-                if (viewMode === 'create' || (viewMode === 'edit' && selectedPlan)) {
-                    const isEditing = viewMode === 'edit';
-                    return (
-                        <div className="profile-section training-plan-creator">
-                        <div className="section-header">
-                        <h3>{isEditing ? 'Edit Training Plan' : 'Create New Training Plan'}</h3>
-                        <div className="form-group plan-name-input">
-                        <label htmlFor="planName">Plan Name:</label>
-                        <input type="text" id="planName" value={currentPlanName} onChange={(e) => setCurrentPlanName(e.target.value)} placeholder="e.g., My Strength Routine" />
-                        </div>
-                        </div>
-                        {apiError && <div className="error-message">{apiError}</div>}
-                        <div className="creator-layout">
-                        {/* Left Side: Current Plan */}
-                        <div className="current-plan-section">
-                        <h4>Plan Exercises ({currentPlanExercises.length})</h4>
-                        {currentPlanExercises.length === 0 ? (<p className="empty-plan-text">Add exercises...</p>) : (
-                            <ul className="current-plan-list">
-                            {currentPlanExercises.map(ex => (
-                                <li key={ex.exerciseId} className="current-plan-item">
-                                <div className="exercise-info">
-                                <strong>{ex.name}</strong>
-                                <div className="reps-time-inputs">
-                                <input type="text" placeholder="Reps" value={ex.reps} onChange={(e) => handleRepTimeChange(ex.exerciseId, 'reps', e.target.value)} />
-                                <span>or</span>
-                                <input type="text" placeholder="Time" value={ex.time} onChange={(e) => handleRepTimeChange(ex.exerciseId, 'time', e.target.value)} />
-                                </div>
-                                </div>
-                                <button onClick={() => handleRemoveExercise(ex)} className="action-button remove-button" title="Remove"><MinusCircleIcon /></button>
-                                </li>
-                            ))}
-                            </ul>
-                        )}
-                        <div className="plan-actions">
-                        <button onClick={isEditing ? handleUpdatePlan : handleSavePlan} className="btn btn-primary" disabled={isSavingPlan || currentPlanExercises.length === 0}>
-                        {isSavingPlan ? 'Saving...' : (isEditing ? 'Update Plan' : 'Save Plan')}
-                        </button>
-                        <button onClick={handleCancelCreateOrEdit} className="btn btn-secondary"> Cancel </button>
-                        </div>
-                        </div>
-                        {/* Right Side: Available Exercises */}
-                        <div className="available-exercises-section">
-                        <h4>Available Exercises ({availableExercises.length})</h4>
-                        {isLoadingExercises ? <p>Loading exercises...</p> : (
-                            <ul className="available-exercises-list">
-                            {availableExercises.sort((a, b) => a.name.localeCompare(b.name)).map(ex => (
-                                <li key={ex.id} className="available-exercise-item">
-                                <span>{ex.name}</span>
-                                <button onClick={() => handleAddExercise(ex)} className="action-button add-button" title="Add"><PlusCircleIcon /></button>
-                                </li>
-                            ))}
-                            {availableExercises.length === 0 && currentPlanExercises.length > 0 && <p>All exercises added.</p>}
-                            {allExercises.length === 0 && !isLoadingExercises && <p>Could not load exercises.</p>}
-                            </ul>
-                        )}
-                        </div>
-                        </div>
-                        </div>
-                    );
-                }
-                // LIST MODE (Default)
-                else {
-                    const manualPlans = trainingPlans.filter(p => !p.isAIPlan);
-                    const aiPlan = trainingPlans.find(p => p.isAIPlan);
-                    return (
-                        <div className="profile-section">
-                        <div className="section-header"><h3>Training Plans</h3><p>Manage your plans.</p></div>
-                        {apiError && <div className="error-message">{apiError}</div>}
-                        {isLoadingData && <p>Loading plans...</p>}
-                        {!isLoadingData && trainingPlans.length === 0 && (
-                            <div className="no-plans-prompt">
-                            <p>No plans saved yet.</p><p>Create one or use AI?</p>
-                            <div className="creation-options">
-                            <button onClick={handleStartCreatePlan} className="btn-icon-large" title="Create New"><PlusCircleIcon /> Create Manually</button>
-                            <button onClick={handleAICreatePlan} className="btn-icon-large" title="Generate AI Plan"><BotIcon /> Generate with AI</button>
+                case 'trainingPlans':
+                    // VIEW MODE
+                    if (viewMode === 'view' && selectedPlan) {
+                        return (
+                            <div className="profile-section">
+                            <div className="section-header">
+                            <h3>{selectedPlan.planName || 'Training Plan'}</h3>
+                            <button onClick={() => setViewMode('list')} className="btn btn-sm btn-secondary back-to-list-btn">
+                            &larr; Back to Plans
+                            </button>
+                            </div>
+                            {selectedPlan.exercises && selectedPlan.exercises.length > 0 ? (
+                                <ul className="view-plan-list">
+                                {selectedPlan.exercises.map((ex, index) => (
+                                    <li key={ex.exerciseId || index} className="view-plan-item">
+                                    <strong>{ex.name || 'Unknown Exercise'}</strong>
+                                    <span>{ex.reps && `Reps: ${ex.reps}`}{ex.reps && ex.time && ' / '}{ex.time && `Time: ${ex.time}`}</span>
+                                    </li>
+                                ))}
+                                </ul>
+                            ) : (
+                                <p>This plan has no exercises.</p>
+                            )}
+                            <div className="plan-actions" style={{marginTop: '1.5rem'}}>
+                            <button onClick={() => handleEditPlan(selectedPlan)} className="btn btn-edit">
+                            <EditIcon /> Edit
+                            </button>
+                            <button onClick={() => handleDeletePlan(selectedPlan)} className="btn btn-delete">
+                            <TrashIcon /> Delete
+                            </button>
                             </div>
                             </div>
-                        )}
-                        {!isLoadingData && trainingPlans.length > 0 && (
-                            <div className="plans-list">
-                            {manualPlans.length > 0 && <h4>Your Plans ({manualPlans.length}/2)</h4>}
-                            {manualPlans.map(plan => (
-                                <div key={plan._id} className="plan-card">
-                                <h5>{plan.planName || 'Unnamed Plan'} ({plan.exercises?.length || 0} exercises)</h5>
-                                <div className="plan-card-actions">
-                                <button className="btn-sm btn-secondary" onClick={() => handleViewPlan(plan)} title="View"><EyeIcon/></button>
-                                <button className="btn-sm btn-edit" onClick={() => handleEditPlan(plan)} title="Edit"><EditIcon/></button>
-                                <button className="btn-sm btn-delete" onClick={() => handleDeletePlan(plan)} title="Delete"><TrashIcon/></button>
-                                </div>
-                                </div>
-                            ))}
-                            {manualPlans.length < 2 && (
-                                <button onClick={handleStartCreatePlan} className="btn btn-outline-primary add-plan-button"><PlusCircleIcon /> Create New Plan</button>
+                        );
+                    }
+
+                    // CREATE OR EDIT MODE
+                    if (viewMode === 'create' || (viewMode === 'edit' && selectedPlan)) {
+                        const isEditing = viewMode === 'edit';
+                        return (
+                            <div className="profile-section training-plan-creator">
+                            <div className="section-header">
+                            <h3>{isEditing ? 'Edit Training Plan' : 'Create New Training Plan'}</h3>
+                            <div className="form-group plan-name-input">
+                            <label htmlFor="planName">Plan Name:</label>
+                            <input type="text" id="planName" value={currentPlanName} onChange={(e) => setCurrentPlanName(e.target.value)} placeholder="e.g., My Strength Routine" />
+                            </div>
+                            </div>
+                            {apiError && <div className="error-message">{apiError}</div>}
+                            <div className="creator-layout">
+                            {/* Left Side: Current Plan */}
+                            <div className="current-plan-section">
+                            <h4>Plan Exercises ({currentPlanExercises.length})</h4>
+                            {currentPlanExercises.length === 0 ? (<p className="empty-plan-text">Add exercises...</p>) : (
+                                <ul className="current-plan-list">
+                                {currentPlanExercises.map(ex => (
+                                    <li key={ex.exerciseId} className="current-plan-item">
+                                    <div className="exercise-info">
+                                    <strong>{ex.name}</strong>
+                                    <div className="reps-time-inputs">
+                                    <input type="text" placeholder="Reps" value={ex.reps} onChange={(e) => handleRepTimeChange(ex.exerciseId, 'reps', e.target.value)} />
+                                    <span>or</span>
+                                    <input type="text" placeholder="Time" value={ex.time} onChange={(e) => handleRepTimeChange(ex.exerciseId, 'time', e.target.value)} />
+                                    </div>
+                                    </div>
+                                    <button onClick={() => handleRemoveExercise(ex)} className="action-button remove-button" title="Remove"><MinusCircleIcon /></button>
+                                    </li>
+                                ))}
+                                </ul>
                             )}
-                            {aiPlan && (
-                                <>
-                                <h4 style={{marginTop: '2rem'}}>AI Generated Plan</h4>
-                                <div key={aiPlan._id} className="plan-card ai-plan-card">
-                                <h5>{aiPlan.planName || 'AI Plan'} ({aiPlan.exercises?.length || 0} exercises)</h5>
-                                <button className="btn-sm btn-secondary" onClick={() => handleViewPlan(aiPlan)} title="View"><EyeIcon/></button>
-                                </div>
-                                </>
-                            )}
-                            {!aiPlan && (
-                                <button onClick={handleAICreatePlan} className="btn btn-outline-secondary add-plan-button ai-button"><BotIcon /> Generate AI Plan</button>
+                            <div className="plan-actions">
+                            <button onClick={isEditing ? handleUpdatePlan : handleSavePlan} className="btn btn-primary" disabled={isSavingPlan || currentPlanExercises.length === 0}>
+                            {isSavingPlan ? 'Saving...' : (isEditing ? 'Update Plan' : 'Save Plan')}
+                            </button>
+                            <button onClick={handleCancelCreateOrEdit} className="btn btn-secondary"> Cancel </button>
+                            </div>
+                            </div>
+                            {/* Right Side: Available Exercises */}
+                            <div className="available-exercises-section">
+                            <h4>Available Exercises ({availableExercises.length})</h4>
+                            {isLoadingExercises ? <p>Loading exercises...</p> : (
+                                <ul className="available-exercises-list">
+                                {availableExercises.sort((a, b) => a.name.localeCompare(b.name)).map(ex => (
+                                    <li key={ex.id} className="available-exercise-item">
+                                    <span>{ex.name}</span>
+                                    <button onClick={() => handleAddExercise(ex)} className="action-button add-button" title="Add"><PlusCircleIcon /></button>
+                                    </li>
+                                ))}
+                                {availableExercises.length === 0 && currentPlanExercises.length > 0 && <p>All exercises added.</p>}
+                                {allExercises.length === 0 && !isLoadingExercises && <p>Could not load exercises.</p>}
+                                </ul>
                             )}
                             </div>
-                        )}
-                        </div>
-                    );
-                }
-                // --- END Training Plans Case ---
-                case 'trainingLog':
-                    return <TrainingLog user={user} allExercises={allExercises} />;
-                case 'progress':
-                    return <ProgressAnalytics user={user} allExercises={allExercises} />;
-                case 'diet':
-                    return (
-                        <>
-                        <DietAnalysisForm user={user} personalInfo={personalInfo} />
-                        <hr className="section-divider" />
-                        <DietTracker user={user} personalInfo={personalInfo} />
-                        </>
-                    );
-                case 'orders': return ( <div className="profile-section"><div className="section-header"><h3>Order History</h3><p>Your past purchases.</p></div>{orders.length === 0 ? <p>No orders yet.</p> : <div>Display orders...</div>}</div> );
-                case 'wishlist': return ( <div className="profile-section"><div className="section-header"><h3>My Wishlist</h3><p>Your saved items.</p></div>{wishlist.length === 0 ? <p>Wishlist is empty.</p> : <div>Display wishlist...</div>}</div> );
-
-                case 'shipping':
-                    return (
-                        <div className="profile-section">
-                        <div className="section-header"><h3>Shipping Address</h3><p>Manage delivery info.</p></div>
-                        {apiError && <div className="error-message">{apiError}</div>}
-                        <form className="profile-form" onSubmit={handleAddressSubmit}>
-                        <div className="form-group"><label htmlFor="street">Street</label><input type="text" id="street" name="street" value={address.street} onChange={handleAddressChange} required /></div>
-                        <div className="form-row"><div className="form-group"><label htmlFor="city">City</label><input type="text" id="city" name="city" value={address.city} onChange={handleAddressChange} required /></div><div className="form-group"><label htmlFor="zip_code">ZIP</label><input type="text" id="zip_code" name="zip_code" value={address.zip_code} onChange={handleAddressChange} required /></div></div>
-                        <button type="submit" className="btn btn-primary">Update Address</button>
-                        </form>
-                        </div>
-                    );
-
-                case 'security':
-                    return (
-                        <div className="profile-section">
-                        <div className="section-header"><h3>Security</h3><p>Change your password.</p></div>
-                        {apiError && <div className="error-message">{apiError}</div>}
-                        <form className="profile-form" onSubmit={handlePasswordSubmit}>
-                        The file will have its original line endings in your working directory
-                        <div className="form-group"><label htmlFor="currentPassword">Current Password</label><input type="password" id="currentPassword" name="currentPassword" placeholder="••••••••" value={passwordData.currentPassword} onChange={handlePasswordChange} required /></div>
-                        <div className="form-group"><label htmlFor="newPassword">New Password</label><input type="password" id="newPassword" name="newPassword" placeholder="••••••••" value={passwordData.newPassword} onChange={handlePasswordChange} required /><small className="form-hint">Min. 8 characters</small></div>
-                        <div className="form-group"><label htmlFor="confirmNewPassword">Confirm New Password</label><input type="password" id="confirmNewPassword" name="confirmNewPassword" placeholder="••••••••" value={passwordData.confirmNewPassword} onChange={handlePasswordChange} required /></div>
-                        <button type="submit" className="btn btn-primary">Update Password</button>
-                        </form>
-                        </div>
-                    );
-
-                default: return null;
+                            </div>
+                            </div>
+                        );
+                    }
+                    // LIST MODE (Default)
+                    else {
+                        const manualPlans = trainingPlans.filter(p => !p.isAIPlan);
+                        const aiPlan = trainingPlans.find(p => p.isAIPlan);
+                        return (
+                            <div className="profile-section">
+                            <div className="section-header"><h3>Training Plans</h3><p>Manage your plans.</p></div>
+                            {apiError && <div className="error-message">{apiError}</div>}
+                            {isLoadingData && <p>Loading plans...</p>}
+                            {!isLoadingData && trainingPlans.length === 0 && (
+                                <div className="no-plans-prompt">
+                                <p>No plans saved yet.</p><p>Create one or use AI?</p>
+                                <div className="creation-options">
+                                <button onClick={handleStartCreatePlan} className="btn-icon-large" title="Create New"><PlusCircleIcon /> Create Manually</button>
+                                <button onClick={handleAICreatePlan} className="btn-icon-large" title="Generate AI Plan"><BotIcon /> Generate with AI</button>
+                                </div>
+                                </div>
+                            )}
+                            {!isLoadingData && trainingPlans.length > 0 && (
+                                <div className="plans-list">
+                                {manualPlans.length > 0 && <h4>Your Plans ({manualPlans.length}/2)</h4>}
+                                {manualPlans.map(plan => (
+                                    <div key={plan._id} className="plan-card">
+                                    <h5>{plan.planName || 'Unnamed Plan'} ({plan.exercises?.length || 0} exercises)</h5>
+                                    <div className="plan-card-actions">
+                                    <button className="btn-sm btn-secondary" onClick={() => handleViewPlan(plan)} title="View"><EyeIcon/></button>
+                                    <button className="btn-sm btn-edit" onClick={() => handleEditPlan(plan)} title="Edit"><EditIcon/></button>
+                                    <button className="btn-sm btn-delete" onClick={() => handleDeletePlan(plan)} title="Delete"><TrashIcon/></button>
+                                    </div>
+                                    </div>
+                                ))}
+                                {manualPlans.length < 2 && (
+                                    <button onClick={handleStartCreatePlan} className="btn btn-outline-primary add-plan-button"><PlusCircleIcon /> Create New Plan</button>
+                                )}
+                                {aiPlan && (
+                                    <>
+                                    <h4 style={{marginTop: '2rem'}}>AI Generated Plan</h4>
+                                    <div key={aiPlan._id} className="plan-card ai-plan-card">
+                                    <h5>{aiPlan.planName || 'AI Plan'} ({aiPlan.exercises?.length || 0} exercises)</h5>
+                                    <button className="btn-sm btn-secondary" onClick={() => handleViewPlan(aiPlan)} title="View"><EyeIcon/></button>
+                                    </div>
+                                    </>
+                                )}
+                                {!aiPlan && (
+                                    <button onClick={handleAICreatePlan} className="btn btn-outline-secondary add-plan-button ai-button"><BotIcon /> Generate AI Plan</button>
+                                )}
+                                </div>
+                            )}
+                            </div>
+                        );
+                    }
+                    // --- END Training Plans Case ---
+                    case 'trainingLog':
+                        return <TrainingLog user={user} allExercises={allExercises} />;
+                    case 'progress':
+                        return <ProgressAnalytics user={user} allExercises={allExercises} />;
+                    case 'diet':
+                        return (
+                            <>
+                            <DietAnalysisForm user={user} personalInfo={personalInfo} />
+                            <hr className="section-divider" />
+                            <DietTracker user={user} personalInfo={personalInfo} />
+                            </>
+                        );
+                    case 'orders': return ( <div className="profile-section"><div className="section-header"><h3>Order History</h3><p>Your past purchases.</p></div>{orders.length === 0 ? <p>No orders yet.</p> : <div>Display orders...</div>}</div> );
+                    case 'wishlist': return ( <div className="profile-section"><div className="section-header"><h3>My Wishlist</h3><p>Your saved items.</p></div>{wishlist.length === 0 ? <p>Wishlist is empty.</p> : <div>Display wishlist...</div>}</div> );
+                    case 'shipping':
+                        return (
+                            <div className="profile-section">
+                            <div className="section-header"><h3>Shipping Address</h3><p>Manage delivery info.</p></div>
+                            {apiError && <div className="error-message">{apiError}</div>}
+                            <form className="profile-form" onSubmit={handleAddressSubmit}>
+                            <div className="form-group"><label htmlFor="street">Street</label><input type="text" id="street" name="street" value={address.street} onChange={handleAddressChange} required /></div>
+                            <div className="form-row"><div className="form-group"><label htmlFor="city">City</label><input type="text" id="city" name="city" value={address.city} onChange={handleAddressChange} required /></div><div className="form-group"><label htmlFor="zip_code">ZIP</label><input type="text" id="zip_code" name="zip_code" value={address.zip_code} onChange={handleAddressChange} required /></div></div>
+                            <button type="submit" className="btn btn-primary">Update Address</button>
+                            </form>
+                            </div>
+                        );
+                    case 'security':
+                        return (
+                            <div className="profile-section">
+                            <div className="section-header"><h3>Security</h3><p>Change your password.</p></div>
+                            {apiError && <div className="error-message">{apiError}</div>}
+                            <form className="profile-form" onSubmit={handlePasswordSubmit}>
+                            <div className="form-group"><label htmlFor="currentPassword">Current Password</label><input type="password" id="currentPassword" name="currentPassword" placeholder="••••••••" value={passwordData.currentPassword} onChange={handlePasswordChange} required /></div>
+                            <div className="form-group"><label htmlFor="newPassword">New Password</label><input type="password" id="newPassword" name="newPassword" placeholder="••••••••" value={passwordData.newPassword} onChange={handlePasswordChange} required /><small className="form-hint">Min. 8 characters</small></div>
+                            <div className="form-group"><label htmlFor="confirmNewPassword">Confirm New Password</label><input type="password" id="confirmNewPassword" name="confirmNewPassword" placeholder="••••••••" value={passwordData.confirmNewPassword} onChange={handlePasswordChange} required /></div>
+                            <button type="submit" className="btn btn-primary">Update Password</button>
+                            </form>
+                            </div>
+                        );
+                    default: return null;
         }
     };
 
@@ -747,7 +769,7 @@ export default function ProfilePage({ user, setUser }) {
         <div className="profile-container">
         {successMessage && (
             <div className="success-toast">
-            s           <CheckCircleIcon /> <span>{successMessage}</span>
+            <CheckCircleIcon /> <span>{successMessage}</span>
             </div>
         )}
         <div className="profile-sidebar">

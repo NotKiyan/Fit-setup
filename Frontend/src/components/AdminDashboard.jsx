@@ -1,5 +1,20 @@
 import { useState, useEffect } from 'react';
 import './AdminDashboard.css';
+import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+    ArcElement,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 const AdminDashboard = ({ user }) => {
     const [activeTab, setActiveTab] = useState('stats');
@@ -24,10 +39,23 @@ const AdminDashboard = ({ user }) => {
 
     const [editingProduct, setEditingProduct] = useState(null);
 
+    // User edit modal state
+    const [editingUser, setEditingUser] = useState(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [userForm, setUserForm] = useState({
+        email: '',
+        first_name: '',
+        last_name: '',
+        role: 'customer',
+        isActive: true,
+        ageGroup: 'Not specified',
+        experienceLevel: 'Not specified'
+    });
+
     // Fetch stats
     const fetchStats = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/admin/stats', {
+            const response = await fetch('http://localhost:5001/api/admin/stats', {
                 headers: {
                     'Authorization': `Bearer ${user.token}`
                 }
@@ -43,7 +71,7 @@ const AdminDashboard = ({ user }) => {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/admin/products', {
+            const response = await fetch('http://localhost:5001/api/admin/products', {
                 headers: {
                     'Authorization': `Bearer ${user.token}`
                 }
@@ -60,7 +88,7 @@ const AdminDashboard = ({ user }) => {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/admin/users', {
+            const response = await fetch('http://localhost:5001/api/admin/users', {
                 headers: {
                     'Authorization': `Bearer ${user.token}`
                 }
@@ -82,8 +110,8 @@ const AdminDashboard = ({ user }) => {
 
         try {
             const url = editingProduct
-                ? `http://localhost:5000/api/admin/products/${editingProduct._id}`
-                : 'http://localhost:5000/api/admin/products';
+                ? `http://localhost:5001/api/admin/products/${editingProduct._id}`
+                : 'http://localhost:5001/api/admin/products';
 
             const method = editingProduct ? 'PUT' : 'POST';
 
@@ -126,7 +154,7 @@ const AdminDashboard = ({ user }) => {
         if (!window.confirm('Are you sure you want to delete this product?')) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/products/${productId}`, {
+            const response = await fetch(`http://localhost:5001/api/admin/products/${productId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${user.token}`
@@ -180,7 +208,7 @@ const AdminDashboard = ({ user }) => {
         if (!window.confirm('Are you sure you want to delete this user?')) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+            const response = await fetch(`http://localhost:5001/api/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${user.token}`
@@ -207,7 +235,7 @@ const AdminDashboard = ({ user }) => {
         if (!window.confirm(`Are you sure you want to change this user's role to ${newRole}?`)) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
+            const response = await fetch(`http://localhost:5001/api/admin/users/${userId}/role`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -223,6 +251,119 @@ const AdminDashboard = ({ user }) => {
                 fetchUsers();
             } else {
                 setError(data.msg || 'Failed to update user role');
+            }
+        } catch (err) {
+            setError('Server error. Please try again.');
+        }
+    };
+
+    // Open edit user modal
+    const handleEditUser = (userToEdit) => {
+        setEditingUser(userToEdit);
+        setUserForm({
+            email: userToEdit.email || '',
+            first_name: userToEdit.first_name || '',
+            last_name: userToEdit.last_name || '',
+            role: userToEdit.role || 'customer',
+            isActive: userToEdit.isActive !== undefined ? userToEdit.isActive : true,
+            ageGroup: userToEdit.ageGroup || 'Not specified',
+            experienceLevel: userToEdit.experienceLevel || 'Not specified'
+        });
+        setShowEditModal(true);
+    };
+
+    // Close edit user modal
+    const handleCloseEditModal = () => {
+        setShowEditModal(false);
+        setEditingUser(null);
+        setUserForm({
+            email: '',
+            first_name: '',
+            last_name: '',
+            role: 'customer',
+            isActive: true,
+            ageGroup: 'Not specified',
+            experienceLevel: 'Not specified'
+        });
+    };
+
+    // Submit user edit
+    const handleUserSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+        setLoading(true);
+
+        try {
+            const response = await fetch(`http://localhost:5001/api/admin/users/${editingUser._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify(userForm)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccess('User updated successfully!');
+                handleCloseEditModal();
+                fetchUsers();
+            } else {
+                setError(data.msg || 'Failed to update user');
+            }
+        } catch (err) {
+            setError('Server error. Please try again.');
+        }
+        setLoading(false);
+    };
+
+    // Toggle user status
+    const handleToggleStatus = async (userId, currentStatus) => {
+        const newStatus = !currentStatus;
+
+        try {
+            const response = await fetch(`http://localhost:5001/api/admin/users/${userId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({ isActive: newStatus })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccess(data.msg);
+                fetchUsers();
+            } else {
+                setError(data.msg || 'Failed to update user status');
+            }
+        } catch (err) {
+            setError('Server error. Please try again.');
+        }
+    };
+
+    // Reset user password
+    const handleResetPassword = async (userId, userEmail) => {
+        if (!window.confirm(`Send password reset email to ${userEmail}?`)) return;
+
+        try {
+            const response = await fetch(`http://localhost:5001/api/admin/users/${userId}/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccess(data.msg);
+            } else {
+                setError(data.msg || 'Failed to send password reset');
             }
         } catch (err) {
             setError('Server error. Please try again.');
@@ -285,26 +426,197 @@ const AdminDashboard = ({ user }) => {
             <div className="admin-content">
                 {/* STATISTICS TAB */}
                 {activeTab === 'stats' && (
-                    <div className="stats-container">
-                        <div className="stat-card">
-                            <h3>Total Users</h3>
-                            <p className="stat-number">{stats.totalUsers || 0}</p>
+                    <div className="stats-dashboard">
+                        <h2>System Statistics & Demographics</h2>
+
+                        <div className="stats-grid">
+                            {/* LEFT COLUMN */}
+                            <div className="stats-left-column">
+                                {/* Pie Chart - Role Distribution */}
+                                <div className="chart-card">
+                                    <h3>User Role Distribution</h3>
+                                    <div className="chart-container">
+                                        {stats.roleDistribution && (
+                                            <Pie
+                                                data={{
+                                                    labels: ['Admin', 'Customer'],
+                                                    datasets: [{
+                                                        data: [
+                                                            stats.roleDistribution.admin || 0,
+                                                            stats.roleDistribution.customer || 0
+                                                        ],
+                                                        backgroundColor: [
+                                                            '#007bff',
+                                                            '#28a745'
+                                                        ],
+                                                        borderColor: ['#fff', '#fff'],
+                                                        borderWidth: 2
+                                                    }]
+                                                }}
+                                                options={{
+                                                    responsive: true,
+                                                    maintainAspectRatio: true,
+                                                    plugins: {
+                                                        legend: {
+                                                            position: 'bottom'
+                                                        },
+                                                        tooltip: {
+                                                            callbacks: {
+                                                                label: function(context) {
+                                                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                                                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* User Summary Table */}
+                                <div className="summary-card">
+                                    <h3>User Summary</h3>
+                                    <div className="summary-table">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Metric</th>
+                                                    <th>Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>Total Users</strong></td>
+                                                    <td className="metric-value">{stats.totalUsers || 0}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Active Users</td>
+                                                    <td className="metric-value success">{stats.activeUsers || 0}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Inactive Users</td>
+                                                    <td className="metric-value muted">{stats.inactiveUsers || 0}</td>
+                                                </tr>
+                                                <tr className="highlight-row">
+                                                    <td><strong>New Sign-ups (This Month)</strong></td>
+                                                    <td className="metric-value primary">{stats.newSignupsThisMonth || 0}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* RIGHT COLUMN */}
+                            <div className="stats-right-column">
+                                {/* Bar Chart - Age Group Distribution */}
+                                <div className="chart-card">
+                                    <h3>Age Group Distribution</h3>
+                                    <div className="chart-container">
+                                        {stats.ageGroupDistribution && (
+                                            <Bar
+                                                data={{
+                                                    labels: Object.keys(stats.ageGroupDistribution),
+                                                    datasets: [{
+                                                        label: 'Number of Users',
+                                                        data: Object.values(stats.ageGroupDistribution),
+                                                        backgroundColor: '#667eea',
+                                                        borderColor: '#5568d3',
+                                                        borderWidth: 1
+                                                    }]
+                                                }}
+                                                options={{
+                                                    responsive: true,
+                                                    maintainAspectRatio: true,
+                                                    scales: {
+                                                        y: {
+                                                            beginAtZero: true,
+                                                            ticks: {
+                                                                stepSize: 1
+                                                            }
+                                                        }
+                                                    },
+                                                    plugins: {
+                                                        legend: {
+                                                            display: false
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Bar Chart - Experience Level Distribution */}
+                                <div className="chart-card">
+                                    <h3>Experience Level Distribution</h3>
+                                    <div className="chart-container">
+                                        {stats.experienceLevelDistribution && (
+                                            <Bar
+                                                data={{
+                                                    labels: Object.keys(stats.experienceLevelDistribution),
+                                                    datasets: [{
+                                                        label: 'Number of Users',
+                                                        data: Object.values(stats.experienceLevelDistribution),
+                                                        backgroundColor: '#f093fb',
+                                                        borderColor: '#e066f0',
+                                                        borderWidth: 1
+                                                    }]
+                                                }}
+                                                options={{
+                                                    responsive: true,
+                                                    maintainAspectRatio: true,
+                                                    indexAxis: 'y',
+                                                    scales: {
+                                                        x: {
+                                                            beginAtZero: true,
+                                                            ticks: {
+                                                                stepSize: 1
+                                                            }
+                                                        }
+                                                    },
+                                                    plugins: {
+                                                        legend: {
+                                                            display: false
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="stat-card">
-                            <h3>Total Products</h3>
-                            <p className="stat-number">{stats.totalProducts || 0}</p>
-                        </div>
-                        <div className="stat-card">
-                            <h3>Admins</h3>
-                            <p className="stat-number">{stats.totalAdmins || 0}</p>
-                        </div>
-                        <div className="stat-card">
-                            <h3>Customers</h3>
-                            <p className="stat-number">{stats.totalCustomers || 0}</p>
-                        </div>
-                        <div className="stat-card warning">
-                            <h3>Low Stock Products</h3>
-                            <p className="stat-number">{stats.lowStockProducts || 0}</p>
+
+                        {/* Additional Stats Table */}
+                        <div className="additional-stats">
+                            <h3>Product Statistics</h3>
+                            <div className="stats-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Metric</th>
+                                            <th>Count</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td className="metric-name">Total Products</td>
+                                            <td className="metric-value">{stats.totalProducts || 0}</td>
+                                            <td className="metric-desc">Products available in inventory</td>
+                                        </tr>
+                                        <tr className="warning-row">
+                                            <td className="metric-name">Low Stock Products</td>
+                                            <td className="metric-value warning">{stats.lowStockProducts || 0}</td>
+                                            <td className="metric-desc">Products with stock below 10 units</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -486,11 +798,12 @@ const AdminDashboard = ({ user }) => {
                                 <table>
                                     <thead>
                                         <tr>
+                                            <th>Name</th>
                                             <th>Email</th>
                                             <th>Role</th>
-                                            <th>First Name</th>
-                                            <th>Last Name</th>
-                                            <th>Phone</th>
+                                            <th>Status</th>
+                                            <th>Experience</th>
+                                            <th>Age Group</th>
                                             <th>Created At</th>
                                             <th>Actions</th>
                                         </tr>
@@ -498,34 +811,58 @@ const AdminDashboard = ({ user }) => {
                                     <tbody>
                                         {users.map(u => (
                                             <tr key={u._id}>
+                                                <td>{u.first_name || u.last_name ? `${u.first_name} ${u.last_name}` : '-'}</td>
                                                 <td>{u.email}</td>
                                                 <td>
                                                     <span className={`role-badge ${u.role}`}>
                                                         {u.role}
                                                     </span>
                                                 </td>
-                                                <td>{u.firstName || '-'}</td>
-                                                <td>{u.lastName || '-'}</td>
-                                                <td>{u.phone || '-'}</td>
+                                                <td>
+                                                    {u._id !== user._id ? (
+                                                        <label className="toggle-switch">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={u.isActive}
+                                                                onChange={() => handleToggleStatus(u._id, u.isActive)}
+                                                            />
+                                                            <span className="toggle-slider"></span>
+                                                        </label>
+                                                    ) : (
+                                                        <span className={`status-badge ${u.isActive ? 'active' : 'inactive'}`}>
+                                                            {u.isActive ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td>{u.experienceLevel || 'Not specified'}</td>
+                                                <td>{u.ageGroup || 'Not specified'}</td>
                                                 <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                                                 <td className="action-buttons">
-                                                    {u._id !== user._id && (
+                                                    {u._id !== user._id ? (
                                                         <>
                                                             <button
-                                                                className="btn-role"
-                                                                onClick={() => handleToggleRole(u._id, u.role)}
+                                                                className="btn-edit"
+                                                                onClick={() => handleEditUser(u)}
+                                                                title="Edit User"
                                                             >
-                                                                {u.role === 'admin' ? 'Demote' : 'Promote'}
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                className="btn-reset"
+                                                                onClick={() => handleResetPassword(u._id, u.email)}
+                                                                title="Reset Password"
+                                                            >
+                                                                Reset
                                                             </button>
                                                             <button
                                                                 className="btn-delete"
                                                                 onClick={() => handleDeleteUser(u._id)}
+                                                                title="Delete User"
                                                             >
                                                                 Delete
                                                             </button>
                                                         </>
-                                                    )}
-                                                    {u._id === user._id && (
+                                                    ) : (
                                                         <span className="current-user-badge">You</span>
                                                     )}
                                                 </td>
@@ -533,6 +870,113 @@ const AdminDashboard = ({ user }) => {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+                        )}
+
+                        {/* Edit User Modal */}
+                        {showEditModal && (
+                            <div className="modal-overlay" onClick={handleCloseEditModal}>
+                                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                    <div className="modal-header">
+                                        <h2>Edit User</h2>
+                                        <button className="modal-close" onClick={handleCloseEditModal}>×</button>
+                                    </div>
+                                    <form onSubmit={handleUserSubmit} className="modal-form">
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <label>Email *</label>
+                                                <input
+                                                    type="email"
+                                                    value={userForm.email}
+                                                    onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <label>First Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={userForm.first_name}
+                                                    onChange={(e) => setUserForm({ ...userForm, first_name: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Last Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={userForm.last_name}
+                                                    onChange={(e) => setUserForm({ ...userForm, last_name: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <label>Role *</label>
+                                                <select
+                                                    value={userForm.role}
+                                                    onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                                                    disabled={editingUser?._id === user._id}
+                                                >
+                                                    <option value="customer">Customer</option>
+                                                    <option value="admin">Admin</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Status *</label>
+                                                <select
+                                                    value={userForm.isActive}
+                                                    onChange={(e) => setUserForm({ ...userForm, isActive: e.target.value === 'true' })}
+                                                    disabled={editingUser?._id === user._id}
+                                                >
+                                                    <option value="true">Active</option>
+                                                    <option value="false">Inactive</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <label>Age Group</label>
+                                                <select
+                                                    value={userForm.ageGroup}
+                                                    onChange={(e) => setUserForm({ ...userForm, ageGroup: e.target.value })}
+                                                >
+                                                    <option value="Not specified">Not specified</option>
+                                                    <option value="18-24">18-24</option>
+                                                    <option value="25-34">25-34</option>
+                                                    <option value="35-44">35-44</option>
+                                                    <option value="45-54">45-54</option>
+                                                    <option value="55+">55+</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Experience Level</label>
+                                                <select
+                                                    value={userForm.experienceLevel}
+                                                    onChange={(e) => setUserForm({ ...userForm, experienceLevel: e.target.value })}
+                                                >
+                                                    <option value="Not specified">Not specified</option>
+                                                    <option value="Beginner">Beginner</option>
+                                                    <option value="Intermediate">Intermediate</option>
+                                                    <option value="Expert">Expert</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="modal-actions">
+                                            <button type="button" className="btn-secondary" onClick={handleCloseEditModal}>
+                                                Cancel
+                                            </button>
+                                            <button type="submit" className="btn-primary" disabled={loading}>
+                                                {loading ? 'Saving...' : 'Save Changes'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         )}
                     </div>

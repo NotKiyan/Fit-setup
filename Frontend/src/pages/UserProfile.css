@@ -565,7 +565,7 @@
 .checkbox-group-scroll {
     max-height: 150px; /* Adjust height as needed */
     overflow-y: auto;
-    border: 1px solid var(--border-color);
+    border: none;
     padding: 10px;
     border-radius: 8px;
     background-color: #fdfdfd; /* Slightly different background */

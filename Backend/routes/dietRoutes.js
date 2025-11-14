@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth'); // Your auth middleware
 const DietLog = require('../models/DietLog');
+const mongoose = require('mongoose');
 
 // GET /api/dietlog - Get all calorie entries for the user
 router.get('/', protect, async (req, res) => {
@@ -33,6 +34,34 @@ router.post('/', protect, async (req, res) => {
         res.status(201).json(savedLog);
     } catch (error) {
         console.error('Error saving diet log:', error);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+router.delete('/:id', protect, async (req, res) => {
+    try {
+        const logId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(logId)) {
+            return res.status(400).json({ msg: 'Invalid diet log ID' });
+        }
+
+        const log = await DietLog.findById(logId);
+
+        if (!log) {
+            return res.status(404).json({ msg: 'Diet log not found' });
+        }
+
+        // Check if the log belongs to the user
+        if (log.userId.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized' });
+        }
+
+        await log.deleteOne();
+        res.json({ msg: 'Diet log removed' });
+
+    } catch (error) {
+        console.error('Error deleting diet log:', error);
         res.status(500).json({ msg: 'Server Error' });
     }
 });
