@@ -152,6 +152,44 @@ const HomePage = () => {
     <a href="#equipment" className="btn btn-secondary">Explore Collection</a>
     </div>
     </section>
+
+
+    {/* --- START: OUR SERVICES SECTION (FROM FILE 1) --- */}
+    <section className="services-section container">
+    <h2 className="services-title">OUR SERVICES</h2>
+    <div className="services-grid">
+
+    <div className="service-card">
+    <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170" alt="World Class Equipment" />
+    <h3>World Class Equipment</h3>
+    <p>Get hooked on to the complete range of internationally reputed fitness branded products. We will guide you through products that are fit for your requirement and space.</p>
+    </div>
+
+    <div className="service-card">
+    <img src="https://images.unsplash.com/photo-1649068618811-9f3547ef98fc?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170" alt="Installation Services" />
+    <h3>Installation Services</h3>
+    <p>We shoulder your entire set-up process from delivery to installations of equipments, saving your valuable time and money.</p>
+    </div>
+
+    <div className="service-card">
+    <img src="https://images.unsplash.com/photo-1637666067348-7303e7007363?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070" alt="Interior Design Solutions" />
+    <h3>Interior Design Solutions</h3>
+    <p>Complete Interior Design Solutions from concept to completion. We turn your space into a world class fitness zone which is functional and aesthetically pleasing.</p>
+    </div>
+
+    <div className="service-card">
+    <img src="https://images.unsplash.com/photo-1674834727206-4bc272bfd8da?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687" alt="Flooring" />
+    <h3>Flooring</h3>
+    <p>Our service offering includes the installation of premier rubber tiles for your space. Now avoid slipping due to wet floors or the lack of grip during intense workouts.</p>
+    </div>
+
+    </div>
+    </section>
+    {/* --- END: OUR SERVICES SECTION --- */}
+
+
+
+
     </main>
   );
 };
