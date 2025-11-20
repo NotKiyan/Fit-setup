@@ -253,10 +253,39 @@ router.get('/stats', protect, admin, async (req, res) => {
             { $sort: { count: -1 } }
         ]);
 
+        // Subcategory distribution for products
+        const subcategoryDistribution = await Product.aggregate([
+            { $match: { subCategory: { $exists: true, $ne: '' } } },
+            { $group: { _id: '$subCategory', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+
         // Order status distribution
         const orderStatusDistribution = await Order.aggregate([
             { $group: { _id: '$orderStatus', count: { $sum: 1 } } },
             { $sort: { count: -1 } }
+        ]);
+
+        // Revenue by category
+        const revenueByCategory = await Order.aggregate([
+            { $match: { paymentStatus: 'paid' } },
+            { $unwind: '$items' },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'items.productId',
+                    foreignField: '_id',
+                    as: 'product'
+                }
+            },
+            { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } },
+            {
+                $group: {
+                    _id: '$product.category',
+                    revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } }
+                }
+            },
+            { $sort: { revenue: -1 } }
         ]);
 
         res.json({
@@ -276,7 +305,9 @@ router.get('/stats', protect, admin, async (req, res) => {
             ageGroupDistribution,
             experienceLevelDistribution,
             categoryDistribution,
-            orderStatusDistribution
+            subcategoryDistribution,
+            orderStatusDistribution,
+            revenueByCategory
         });
     } catch (error) {
         console.error(error);
