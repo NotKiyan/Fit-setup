@@ -433,7 +433,7 @@ const AdminDashboard = ({ user }) => {
                             <h3>Products by Category</h3>
                             <Pie
                                 data={{
-                                    labels: stats.categoryDistribution.map(item => item._id || 'Unknown'),
+                                    labels: stats.categoryDistribution.map(item => item._id || 'Uncategorized'),
                                     datasets: [{
                                         data: stats.categoryDistribution.map(item => item.count),
                                         backgroundColor: [
@@ -448,10 +448,103 @@ const AdminDashboard = ({ user }) => {
                                 }}
                                 options={{
                                     responsive: true,
-                                    maintainAspectRatio: true,
+                                    maintainAspectRatio: false,
                                     plugins: {
                                         legend: {
-                                            position: 'bottom'
+                                            position: 'bottom',
+                                            labels: {
+                                                boxWidth: 15,
+                                                padding: 10
+                                            }
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Revenue by Category */}
+                    {stats.revenueByCategory && stats.revenueByCategory.length > 0 && (
+                        <div className="chart-container">
+                            <h3>Revenue by Category</h3>
+                            <Pie
+                                data={{
+                                    labels: stats.revenueByCategory.map(item => item._id || 'Other'),
+                                    datasets: [{
+                                        data: stats.revenueByCategory.map(item => item.revenue),
+                                        backgroundColor: [
+                                            '#FF6384',
+                                            '#36A2EB',
+                                            '#FFCE56',
+                                            '#4BC0C0',
+                                            '#9966FF',
+                                            '#FF9F40'
+                                        ]
+                                    }]
+                                }}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom',
+                                            labels: {
+                                                boxWidth: 15,
+                                                padding: 10
+                                            }
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context) {
+                                                    return context.label + ': ₹' + context.parsed.toLocaleString();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Subcategory Distribution */}
+                    {stats.subcategoryDistribution && stats.subcategoryDistribution.length > 0 && (
+                        <div className="chart-container">
+                            <h3>Products by Subcategory</h3>
+                            <Pie
+                                data={{
+                                    labels: stats.subcategoryDistribution.map(item => item._id),
+                                    datasets: [{
+                                        data: stats.subcategoryDistribution.map(item => item.count),
+                                        backgroundColor: [
+                                            '#FF6384',
+                                            '#36A2EB',
+                                            '#FFCE56',
+                                            '#4BC0C0',
+                                            '#9966FF',
+                                            '#FF9F40',
+                                            '#E74C3C',
+                                            '#3498DB',
+                                            '#F39C12',
+                                            '#1ABC9C',
+                                            '#9B59B6',
+                                            '#E67E22',
+                                            '#2ECC71'
+                                        ]
+                                    }]
+                                }}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom',
+                                            labels: {
+                                                boxWidth: 15,
+                                                padding: 8,
+                                                font: {
+                                                    size: 11
+                                                }
+                                            }
                                         }
                                     }
                                 }}
@@ -460,24 +553,32 @@ const AdminDashboard = ({ user }) => {
                     )}
 
                     {/* Order Status Distribution */}
-                    {stats.orderStatusDistribution && stats.orderStatusDistribution.length > 0 && (
+                    {stats.totalOrders > 0 && (
                         <div className="chart-container">
-                            <h3>Orders by Status</h3>
+                            <h3>Total Orders: {stats.totalOrders}</h3>
                             <Bar
                                 data={{
-                                    labels: stats.orderStatusDistribution.map(item => item._id || 'Unknown'),
+                                    labels: stats.orderStatusDistribution && stats.orderStatusDistribution.length > 0
+                                        ? stats.orderStatusDistribution.map(item => item._id || 'Unknown')
+                                        : ['No Orders'],
                                     datasets: [{
                                         label: 'Number of Orders',
-                                        data: stats.orderStatusDistribution.map(item => item.count),
+                                        data: stats.orderStatusDistribution && stats.orderStatusDistribution.length > 0
+                                            ? stats.orderStatusDistribution.map(item => item.count)
+                                            : [0],
                                         backgroundColor: '#36A2EB'
                                     }]
                                 }}
                                 options={{
                                     responsive: true,
-                                    maintainAspectRatio: true,
+                                    maintainAspectRatio: false,
                                     plugins: {
                                         legend: {
                                             display: false
+                                        },
+                                        title: {
+                                            display: true,
+                                            text: 'Order Status Breakdown'
                                         }
                                     },
                                     scales: {
