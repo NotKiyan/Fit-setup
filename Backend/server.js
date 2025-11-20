@@ -40,6 +40,8 @@ app.use('/api/progress', require('./routes/progressRoutes'));
 app.use('/api/dietanalysis', require('./routes/dietAnalysisRoutes'));
 app.use('/api/dietlog', require('./routes/dietRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/cart', require('./routes/cartRoutes'));
+app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 
 // --- Server Initialization ---
 const PORT = process.env.PORT || 5000;
