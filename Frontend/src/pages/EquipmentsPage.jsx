@@ -250,10 +250,10 @@ export default function EquipmentProductsPage() {
                 </div>
                 <div className="equipments-product-info">
                 <h3 className="equipments-product-name">{product.name}</h3>
-                <p className="equipments-product-price">${product.finalPrice?.toLocaleString() || product.price?.toLocaleString()}</p>
+                <p className="equipments-product-price">₹{product.finalPrice?.toLocaleString() || product.price?.toLocaleString()}</p>
                 {product.discount > 0 && (
                     <p className="equipments-product-original-price">
-                    <s>${product.price?.toLocaleString()}</s> ({product.discount}% off)
+                    <s>₹{product.price?.toLocaleString()}</s> ({product.discount}% off)
                     </p>
                 )}
                 </div>

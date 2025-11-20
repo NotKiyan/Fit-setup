@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './CartPage.css'; // We'll create this CSS file next
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 // --- SVG Icons ---
 const TrashIcon = () => (
@@ -27,40 +29,136 @@ const MinusIcon = () => (
 
 
 export default function CartPage() {
-    // --- Mock Cart Data ---
-    // In a real app, this would come from context, state management, or API
-    const [cartItems, setCartItems] = useState([
-        { id: 1, name: 'Pro-Grade Dumbbell Set (20kg)', price: 249.99, quantity: 1, image: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=2070&auto=format&fit=crop' },
-                                               { id: 4, name: 'Kettlebell Pro (16kg)', price: 79.99, quantity: 2, image: 'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?q=80&w=1169&auto=format&fit=crop' },
-    ]);
-
+    const navigate = useNavigate();
+    const [cartItems, setCartItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [subtotal, setSubtotal] = useState(0);
-    const [shippingCost, setShippingCost] = useState(15.00); // Example shipping cost
+    const [shippingCost, setShippingCost] = useState(0); // Free shipping
     const [total, setTotal] = useState(0);
+
+    // Fetch cart data
+    useEffect(() => {
+        fetchCart();
+    }, []);
+
+    const fetchCart = async () => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            setLoading(false);
+            return;
+        }
+
+        const user = JSON.parse(userStr);
+
+        try {
+            setLoading(true);
+            const response = await fetch(`${API_BASE_URL}/cart`, {
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCartItems(data.items || []);
+            } else {
+                setError('Failed to load cart');
+            }
+        } catch (err) {
+            console.error('Error fetching cart:', err);
+            setError('Failed to load cart');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // --- Calculate Totals ---
     useEffect(() => {
-        const newSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const newSubtotal = cartItems.reduce((sum, item) => sum + item.finalPrice * item.quantity, 0);
         setSubtotal(newSubtotal);
         setTotal(newSubtotal + shippingCost);
     }, [cartItems, shippingCost]);
 
     // --- Handlers ---
-    const handleQuantityChange = (id, delta) => {
-        setCartItems(currentItems =>
-        currentItems.map(item =>
-        item.id === id
-        ? { ...item, quantity: Math.max(1, item.quantity + delta) } // Ensure quantity doesn't go below 1
-        : item
-        ).filter(item => item.quantity > 0) // Optionally remove item if quantity becomes 0, though we prevent going below 1 here.
-        );
+    const handleQuantityChange = async (productId, delta) => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return;
+
+        const user = JSON.parse(userStr);
+        const item = cartItems.find(item => item.productId === productId);
+        if (!item) return;
+
+        const newQuantity = Math.max(1, item.quantity + delta);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({ quantity: newQuantity })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCartItems(data.cart.items || []);
+            } else {
+                const data = await response.json();
+                alert(data.msg || 'Failed to update quantity');
+            }
+        } catch (err) {
+            console.error('Error updating quantity:', err);
+            alert('Failed to update quantity');
+        }
     };
 
-    const handleRemoveItem = (id) => {
-        setCartItems(currentItems => currentItems.filter(item => item.id !== id));
+    const handleRemoveItem = async (productId) => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return;
+
+        const user = JSON.parse(userStr);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCartItems(data.cart.items || []);
+            } else {
+                alert('Failed to remove item');
+            }
+        } catch (err) {
+            console.error('Error removing item:', err);
+            alert('Failed to remove item');
+        }
     };
 
     // --- Render Logic ---
+    if (loading) {
+        return (
+            <div className="cart-page-container empty-cart">
+            <h2>Loading cart...</h2>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="cart-page-container empty-cart">
+            <h2>Error loading cart</h2>
+            <p>{error}</p>
+            <Link to="/equipments" className="btn btn-primary">Start Shopping</Link>
+            </div>
+        );
+    }
+
     if (cartItems.length === 0) {
         return (
             <div className="cart-page-container empty-cart">
@@ -78,23 +176,23 @@ export default function CartPage() {
         {/* Cart Items List */}
         <div className="cart-items-list">
         {cartItems.map(item => (
-            <div className="cart-item" key={item.id}>
+            <div className="cart-item" key={item.productId}>
             <img src={item.image} alt={item.name} className="cart-item-image" />
             <div className="cart-item-details">
             <h3 className="cart-item-name">{item.name}</h3>
-            <p className="cart-item-price">${item.price.toFixed(2)}</p>
+            <p className="cart-item-price">₹{item.finalPrice?.toLocaleString()}</p>
             </div>
             <div className="cart-item-quantity">
-            <button onClick={() => handleQuantityChange(item.id, -1)} aria-label="Decrease quantity">
+            <button onClick={() => handleQuantityChange(item.productId, -1)} aria-label="Decrease quantity">
             <MinusIcon />
             </button>
             <span>{item.quantity}</span>
-            <button onClick={() => handleQuantityChange(item.id, 1)} aria-label="Increase quantity">
+            <button onClick={() => handleQuantityChange(item.productId, 1)} aria-label="Increase quantity">
             <PlusIcon />
             </button>
             </div>
-            <p className="cart-item-total">${(item.price * item.quantity).toFixed(2)}</p>
-            <button className="cart-item-remove" onClick={() => handleRemoveItem(item.id)} aria-label="Remove item">
+            <p className="cart-item-total">₹{(item.finalPrice * item.quantity).toLocaleString()}</p>
+            <button className="cart-item-remove" onClick={() => handleRemoveItem(item.productId)} aria-label="Remove item">
             <TrashIcon />
             </button>
             </div>
@@ -106,16 +204,16 @@ export default function CartPage() {
         <h2>Order Summary</h2>
         <div className="summary-row">
         <span>Subtotal</span>
-        <span>${subtotal.toFixed(2)}</span>
+        <span>₹{subtotal.toLocaleString()}</span>
         </div>
         <div className="summary-row">
         <span>Estimated Shipping</span>
-        <span>${shippingCost.toFixed(2)}</span>
+        <span>{shippingCost > 0 ? `₹${shippingCost.toLocaleString()}` : 'FREE'}</span>
         </div>
         <hr className="summary-divider" />
         <div className="summary-row total-row">
         <span>Total</span>
-        <span>${total.toFixed(2)}</span>
+        <span>₹{total.toLocaleString()}</span>
         </div>
         <button className="btn btn-primary checkout-btn">Proceed to Checkout</button>
         <Link to="/equipments" className="continue-shopping-link">Continue Shopping</Link>

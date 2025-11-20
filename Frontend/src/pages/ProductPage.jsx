@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import './ProductPage.css';
 import { FaStar, FaTruck, FaShieldAlt, FaCheck, FaRulerCombined, FaWeightHanging } from 'react-icons/fa';
+import wishlistIcon from '../assets/wishlist.png';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -30,6 +31,14 @@ const ProductPage = () => {
     const [reviewSuccess, setReviewSuccess] = useState('');
     const [canReview, setCanReview] = useState(false);
     const [reviewEligibility, setReviewEligibility] = useState(null);
+    // State for cart
+    const [cartLoading, setCartLoading] = useState(false);
+    const [cartMessage, setCartMessage] = useState('');
+    const [cartError, setCartError] = useState('');
+    // State for wishlist
+    const [inWishlist, setInWishlist] = useState(false);
+    const [wishlistLoading, setWishlistLoading] = useState(false);
+    const [wishlistMessage, setWishlistMessage] = useState('');
 
     // Fetch product data from API
     useEffect(() => {
@@ -115,9 +124,158 @@ const ProductPage = () => {
         window.scrollTo(0, 0);
     }, [id]);
 
+    // Check if product is in wishlist
+    useEffect(() => {
+        const checkWishlist = async () => {
+            if (!id) return;
+
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                setInWishlist(false);
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/wishlist/check/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${user.token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setInWishlist(data.inWishlist);
+                }
+            } catch (err) {
+                console.error('Error checking wishlist:', err);
+            }
+        };
+
+        checkWishlist();
+    }, [id]);
+
     const handleQuantityChange = (type) => {
         if (type === 'dec' && quantity > 1) setQuantity(quantity - 1);
         if (type === 'inc') setQuantity(quantity + 1);
+    };
+
+    const handleAddToCart = async () => {
+        // Clear previous messages
+        setCartMessage('');
+        setCartError('');
+
+        // Check if user is logged in
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            setCartError('Please login to add items to cart');
+            return;
+        }
+
+        // Check stock
+        if (product.stock < 1) {
+            setCartError('Product is out of stock');
+            return;
+        }
+
+        if (quantity > product.stock) {
+            setCartError(`Only ${product.stock} items available in stock`);
+            return;
+        }
+
+        const user = JSON.parse(userStr);
+
+        try {
+            setCartLoading(true);
+            const response = await fetch(`${API_BASE_URL}/cart`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    productId: id,
+                    quantity: quantity
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setCartMessage('Item added to cart successfully!');
+                // Clear message after 3 seconds
+                setTimeout(() => setCartMessage(''), 3000);
+            } else {
+                setCartError(data.msg || 'Failed to add item to cart');
+            }
+        } catch (err) {
+            console.error('Error adding to cart:', err);
+            setCartError('Failed to add item to cart. Please try again.');
+        } finally {
+            setCartLoading(false);
+        }
+    };
+
+    const handleToggleWishlist = async () => {
+        // Clear previous messages
+        setWishlistMessage('');
+
+        // Check if user is logged in
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            setCartError('Please login to add items to wishlist');
+            return;
+        }
+
+        const user = JSON.parse(userStr);
+
+        try {
+            setWishlistLoading(true);
+
+            if (inWishlist) {
+                // Remove from wishlist
+                const response = await fetch(`${API_BASE_URL}/wishlist/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${user.token}`
+                    }
+                });
+
+                if (response.ok) {
+                    setInWishlist(false);
+                    setWishlistMessage('Removed from wishlist');
+                    setTimeout(() => setWishlistMessage(''), 2000);
+                }
+            } else {
+                // Add to wishlist
+                const response = await fetch(`${API_BASE_URL}/wishlist`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${user.token}`
+                    },
+                    body: JSON.stringify({ productId: id })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    setInWishlist(true);
+                    setWishlistMessage('Added to wishlist');
+                    setTimeout(() => setWishlistMessage(''), 2000);
+                } else {
+                    setCartError(data.msg || 'Failed to add to wishlist');
+                    setTimeout(() => setCartError(''), 3000);
+                }
+            }
+        } catch (err) {
+            console.error('Error toggling wishlist:', err);
+            setCartError('Failed to update wishlist. Please try again.');
+            setTimeout(() => setCartError(''), 3000);
+        } finally {
+            setWishlistLoading(false);
+        }
     };
 
     const handleReviewSubmit = async (e) => {
@@ -315,14 +473,31 @@ const ProductPage = () => {
 
             <hr className="divider" />
 
+            {/* Cart Messages */}
+            {cartMessage && <div className="alert alert-success">{cartMessage}</div>}
+            {cartError && <div className="alert alert-error">{cartError}</div>}
+            {wishlistMessage && <div className="alert alert-success">{wishlistMessage}</div>}
+
             <div className="actions-container">
             <div className="quantity-selector">
             <button onClick={() => handleQuantityChange('dec')}>-</button>
             <span>{quantity}</span>
             <button onClick={() => handleQuantityChange('inc')}>+</button>
             </div>
-            <button className="btn btn-primary add-to-cart-btn">
-            Add to Cart
+            <button
+                className="btn btn-primary add-to-cart-btn"
+                onClick={handleAddToCart}
+                disabled={cartLoading || product.stock < 1}
+            >
+            {cartLoading ? 'Adding...' : 'Add to Cart'}
+            </button>
+            <button
+                className={`btn wishlist-btn ${inWishlist ? 'in-wishlist' : ''}`}
+                onClick={handleToggleWishlist}
+                disabled={wishlistLoading}
+                title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+            <img src={wishlistIcon} alt="Wishlist" className="wishlist-icon" />
             </button>
             </div>
 

@@ -2,13 +2,36 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram } from "react-icons/fa";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 // --- START: ICON COMPONENTS ---
-const CartIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="9" cy="21" r="1"></circle>
-    <circle cx="20" cy="21" r="1"></circle>
-    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-    </svg>
+const CartIcon = ({ count }) => (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        {count > 0 && (
+            <span style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-8px',
+                backgroundColor: '#e74c3c',
+                color: 'white',
+                borderRadius: '50%',
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '11px',
+                fontWeight: 'bold'
+            }}>
+                {count > 99 ? '99+' : count}
+            </span>
+        )}
+    </div>
 );
 
 const UserIcon = () => (
@@ -70,11 +93,8 @@ const UserDropdown = ({ user, onLogout }) => {
                 <li><Link to="/admin" style={{ fontWeight: 'bold', color: '#007bff' }}>Admin Dashboard</Link></li>
             )}
             <li><Link to="/profile">Order History</Link></li>
-            <li><a href="#favorites">Favorites Lists</a></li>
-            <li><a href="#address">Address Book</a></li>
-            <li><a href="#communications">Communications</a></li>
+            <li><Link to="/favorites">Favorites Lists</Link></li>
             <li><Link to="/profile">Account Information</Link></li>
-            <li><a href="#returns">Return Request</a></li>
             <li><button onClick={onLogout} className="dropdown-signout">Sign Out</button></li>
             </ul>
             </div>
@@ -88,14 +108,61 @@ const UserDropdown = ({ user, onLogout }) => {
 // --- START: MAIN LAYOUT COMPONENT ---
 export default function Layout({ user, setUser }) {
     const headerRef = useRef(null);
+    const [cartCount, setCartCount] = useState(0);
+
+    // Fetch cart count
+    const fetchCartCount = async () => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            setCartCount(0);
+            return;
+        }
+
+        const userData = JSON.parse(userStr);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/cart`, {
+                headers: {
+                    'Authorization': `Bearer ${userData.token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const totalItems = data.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+                setCartCount(totalItems);
+            }
+        } catch (err) {
+            console.error('Error fetching cart count:', err);
+        }
+    };
 
     // Updated handleLogout (from file 2)
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('userEmail');
         localStorage.removeItem('userRole'); // Added this line
+        localStorage.removeItem('user');
         setUser(null);
+        setCartCount(0);
     };
+
+    // Fetch cart count when user changes
+    useEffect(() => {
+        if (user) {
+            fetchCartCount();
+        } else {
+            setCartCount(0);
+        }
+    }, [user]);
+
+    // Refresh cart count periodically (every 30 seconds)
+    useEffect(() => {
+        if (user) {
+            const interval = setInterval(fetchCartCount, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [user]);
 
     useEffect(() => {
         const onScroll = () => {
@@ -130,7 +197,7 @@ export default function Layout({ user, setUser }) {
             <Link to="/login" className="nav-link">Sign In</Link>
         )}
         {/* Kept conditional cart link (from file 1) */}
-        {user && <Link to="/cart" className="nav-link"><CartIcon /></Link>}
+        {user && <Link to="/cart" className="nav-link"><CartIcon count={cartCount} /></Link>}
         </div>
         </nav>
         </header>

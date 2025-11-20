@@ -240,6 +240,40 @@
     padding: 12px 24px;
 }
 
+.wishlist-btn {
+    width: 50px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #dee2e6;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.wishlist-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.wishlist-btn:hover {
+    border-color: #e74c3c;
+    background: #fff5f5;
+}
+
+.wishlist-btn.in-wishlist {
+    border-color: #e74c3c;
+    background: #fff5f5;
+}
+
+.wishlist-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .stock-status {
     display: flex;
     align-items: center;

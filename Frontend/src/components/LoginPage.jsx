@@ -107,6 +107,8 @@ const LoginPage = ({ setUser }) => {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userRole', data.role || 'customer');
+                // Store complete user object for cart functionality
+                localStorage.setItem('user', JSON.stringify({ email, token: data.token, role: data.role || 'customer' }));
 
                 // Set user state with role
                 setUser({ email, token: data.token, role: data.role || 'customer' });
