@@ -204,6 +204,7 @@ router.get('/stats', protect, admin, async (req, res) => {
         const totalAdmins = await User.countDocuments({ role: 'admin' });
         const totalCustomers = await User.countDocuments({ role: 'customer' });
         const lowStockProducts = await Product.countDocuments({ stock: { $lt: 10 } });
+        const outOfStockProducts = await Product.countDocuments({ stock: 0 });
 
         // Active/Inactive users
         const activeUsers = await User.countDocuments({ isActive: true });
@@ -235,18 +236,47 @@ router.get('/stats', protect, admin, async (req, res) => {
             experienceLevelDistribution[level] = await User.countDocuments({ experienceLevel: level });
         }
 
+        // Order statistics
+        const totalOrders = await Order.countDocuments();
+        const pendingOrders = await Order.countDocuments({ orderStatus: 'processing' });
+
+        // Calculate total revenue
+        const revenueData = await Order.aggregate([
+            { $match: { paymentStatus: 'paid' } },
+            { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+        ]);
+        const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
+
+        // Category distribution for products
+        const categoryDistribution = await Product.aggregate([
+            { $group: { _id: '$category', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+
+        // Order status distribution
+        const orderStatusDistribution = await Order.aggregate([
+            { $group: { _id: '$orderStatus', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+
         res.json({
             totalUsers,
             totalProducts,
+            totalOrders,
+            totalRevenue,
             totalAdmins,
             totalCustomers,
-            lowStockProducts,
-            activeUsers,
+            lowStockCount: lowStockProducts,
+            outOfStockCount: outOfStockProducts,
+            pendingOrdersCount: pendingOrders,
+            activeUsersCount: activeUsers,
             inactiveUsers,
             newSignupsThisMonth,
             roleDistribution,
             ageGroupDistribution,
-            experienceLevelDistribution
+            experienceLevelDistribution,
+            categoryDistribution,
+            orderStatusDistribution
         });
     } catch (error) {
         console.error(error);

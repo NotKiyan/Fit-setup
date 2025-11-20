@@ -23,6 +23,7 @@ router.get('/profile', protect, async (req, res) => {
             last_name: user.last_name,
             phone_number: user.phone_number,
             shipping_address: user.shipping_address,
+            shipping_addresses: user.shipping_addresses || [],
             // *** ADD PERSONAL INFO TO RESPONSE ***
             personalInfo: personalInfo || {}, // Send fetched data or empty object
             // role: user.role, // Include role if needed elsewhere
@@ -47,7 +48,7 @@ router.put('/profile', protect, async (req, res) => {
             user.last_name = req.body.last_name || user.last_name;
             user.phone_number = req.body.phone_number || user.phone_number;
 
-            // Update shipping address if provided
+            // Update shipping address if provided (legacy single address)
             if (req.body.shipping_address) {
                 user.shipping_address = {
                     street: req.body.shipping_address.street || user.shipping_address.street,
@@ -55,6 +56,11 @@ router.put('/profile', protect, async (req, res) => {
                     zip_code: req.body.shipping_address.zip_code || user.shipping_address.zip_code,
                     // Add state/country if needed
                 };
+            }
+
+            // Update shipping addresses array if provided (new multiple addresses)
+            if (req.body.shipping_addresses !== undefined) {
+                user.shipping_addresses = req.body.shipping_addresses;
             }
 
             const updatedUser = await user.save();
@@ -70,6 +76,7 @@ router.put('/profile', protect, async (req, res) => {
                 last_name: updatedUser.last_name,
                 phone_number: updatedUser.phone_number,
                 shipping_address: updatedUser.shipping_address,
+                shipping_addresses: updatedUser.shipping_addresses,
                 // *** ADD PERSONAL INFO TO RESPONSE ***
                 personalInfo: personalInfo || {},
                 // role: updatedUser.role,

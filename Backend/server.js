@@ -49,6 +49,7 @@ app.use('/api/dietlog', require('./routes/dietRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/cart', require('./routes/cartRoutes'));
 app.use('/api/wishlist', require('./routes/wishlistRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
 
 // --- Server Initialization ---
 const PORT = process.env.PORT || 5000;
