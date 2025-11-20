@@ -66,4 +66,36 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// --- Route: POST /api/auth/reset-password ---
+router.post('/reset-password', async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    try {
+        // Validate input
+        if (!email || !newPassword) {
+            return res.status(400).json({ msg: 'Email and new password are required' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ msg: 'Password must be at least 8 characters long' });
+        }
+
+        // Find user by email
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User with this email does not exist' });
+        }
+
+        // Update password (pre-save hook will hash it automatically)
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ msg: 'Password reset successful' });
+    } catch (error) {
+        console.error('Password reset error:', error);
+        res.status(500).json({ msg: 'Server Error during password reset' });
+    }
+});
+
 module.exports = router;
