@@ -12,7 +12,7 @@ export default function DietTracker({ user, personalInfo }) {
     const [entryCalories, setEntryCalories] = useState('');
     const [editingLogId, setEditingLogId] = useState(null); // **NEW** To track editing state
 
-    const API_URL = 'http://localhost:5000/api/dietlog'; // Your backend URL
+    const API_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api') + '/dietlog'; // Your backend URL
 
     // --- Fetch Diet Logs ---
     useEffect(() => {

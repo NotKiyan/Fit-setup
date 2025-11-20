@@ -8,7 +8,7 @@ export default function DietAnalysisForm({ user, personalInfo }) {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    const API_URL = 'http://localhost:5000/api/dietanalysis'; // New backend URL
+    const API_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api') + '/dietanalysis'; // New backend URL
 
     // --- This hook fetches saved data or pre-fills from personalInfo ---
     useEffect(() => {

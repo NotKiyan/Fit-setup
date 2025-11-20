@@ -17,7 +17,7 @@ ChartJS.register(
 );
 
 // Read API base URL from Vite env (must start with VITE_)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/admin';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '/api/admin');
 
 const AdminDashboard = ({ user }) => {
     const [activeTab, setActiveTab] = useState('stats');

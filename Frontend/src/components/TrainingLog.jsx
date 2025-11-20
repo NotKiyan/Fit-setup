@@ -28,7 +28,7 @@ export default function TrainingLog({ user, allExercises }) {
     const [rpe, setRpe] = useState('');
     const [notes, setNotes] = useState('');
 
-    const API_URL = 'http://localhost:5000/api/workoutlog';
+    const API_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api') + '/workoutlog';
 
     // --- 1. Fetch all past workout *sessions* ---
     const fetchWorkouts = async () => {

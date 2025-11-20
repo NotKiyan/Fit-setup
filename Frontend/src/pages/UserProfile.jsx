@@ -75,9 +75,10 @@ export default function ProfilePage({ user, setUser }) {
     const wishlist = [];
 
     // --- API Base URLs ---
-    const USER_API_BASE_URL = 'http://localhost:5000/api/users';
-    const EXERCISE_API_BASE_URL = 'http://localhost:5000/api/exercises';
-    const PLAN_API_BASE_URL = 'http://localhost:5000/api/trainingplans';
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    const USER_API_BASE_URL = `${API_BASE}/users`;
+    const EXERCISE_API_BASE_URL = `${API_BASE}/exercises`;
+    const PLAN_API_BASE_URL = `${API_BASE}/trainingplans`;
 
     const navigate = useNavigate();
 

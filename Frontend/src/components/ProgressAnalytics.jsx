@@ -13,10 +13,10 @@ export default function ProgressAnalytics({ user, allExercises }) {
     const [error, setError] = useState('');
     const [consistencyData, setConsistencyData] = useState([]);
     const [isLoadingConsistency, setIsLoadingConsistency] = useState(true);
-    const CONSISTENCY_API_URL = 'http://localhost:5000/api/progress/consistency';
-
-    const PR_API_URL = 'http://localhost:5000/api/progress/prs';
-    const STRENGTH_API_URL = 'http://localhost:5000/api/progress/strength';
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    const CONSISTENCY_API_URL = `${API_BASE}/progress/consistency`;
+    const PR_API_URL = `${API_BASE}/progress/prs`;
+    const STRENGTH_API_URL = `${API_BASE}/progress/strength`;
 
     // --- 1. Fetch Personal Records (PRs) on component mount ---
     useEffect(() => {
