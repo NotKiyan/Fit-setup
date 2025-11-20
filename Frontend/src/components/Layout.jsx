@@ -119,7 +119,7 @@ export default function Layout({ user, setUser }) {
         <div className="nav-links">
         <Link to="/" className="nav-link">Home</Link>
         <Link to="/equipments" className="nav-link">Equipments</Link>
-        <Link to="/apparels" className="nav-link">Apparels</Link>
+        <Link to="/accessories" className="nav-link">Accessories</Link>
         {/* Updated Blog link (from file 2) */}
         <Link to="/blog" className="nav-link">Blog</Link>
         </div>

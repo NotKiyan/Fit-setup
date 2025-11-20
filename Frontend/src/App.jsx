@@ -10,8 +10,8 @@ import LoginPage from './components/LoginPage'; //
 import RequireAuth from './components/RequireAuth'; //
 import AdminDashboard from './components/AdminDashboard'; // Added
 import EquipmentsPage from './pages/EquipmentsPage'; //
-import ApparelsPage from './pages/ApparelsPage'; //
-
+import AccessoriesPage from './pages/AccessoriesPage'; //
+import ProductPage from './pages/ProductPage';
 /**
  * This component contains the routing logic and location-based effects.
  * It's wrapped by <Router> in the App component.
@@ -42,9 +42,10 @@ function AppContent({ user, setUser }) {
     <Route path="/" element={<HomePage />} />
     <Route path="/cart" element={<CartPage />} />
     <Route path="/equipments" element={<EquipmentsPage />} />
-    <Route path="/apparels" element={<ApparelsPage />} />
-    <Route path="/blog" element={<BlogPage />} /> {/* Added from file 2 */}
-    <Route path="*" element={<Navigate to="/" replace />} /> {/* Catch-all inside Layout */}
+    <Route path="/accessories" element={<AccessoriesPage />} />
+    <Route path="/blog" element={<BlogPage />} />
+    <Route path="*" element={<Navigate to="/" replace />} />
+    <Route path="/product/:id" element={<ProductPage />} />
     </Route>
 
     {/* Routes WITHOUT Layout */}

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import './ApparelsPage.css';
+import './AccessoriesPage.css';
 
 // --- SVG Icons ---
 const FilterIcon = () => (
@@ -92,7 +92,7 @@ const sortOptions = [
 ];
 
 
-export default function ApparelsPage() {
+export default function AccessoriesPage() {
     const [selectedCategoryId, setSelectedCategoryId] = useState('men-all');
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [selectedSort, setSelectedSort] = useState(sortOptions[0]);
