@@ -17,8 +17,7 @@ app.use(cors({
     origin: [
         'http://localhost:5173',
         'http://localhost:3000',
-        'https://fit-setup-frontend.vercel.app', // Update this with your actual Vercel URL
-        'https://your-custom-domain.com' // Add any custom domains here
+        'https://fit-setup.vercel.app'
     ],
     credentials: true
 })); // Enable CORS
