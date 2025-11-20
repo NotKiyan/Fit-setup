@@ -2,98 +2,14 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const User = require('../models/User');
+const Order = require('../models/Order');
 const { protect, admin } = require('../middleware/auth');
 
 // All routes here are protected by both authentication AND admin role
 // Usage: router.METHOD(path, protect, admin, handler)
 
-// ==================== PRODUCT MANAGEMENT ROUTES ====================
-
-// --- Route: GET /api/admin/products ---
-// @desc    Get all products (admin view)
-// @access  Private/Admin
-router.get('/products', protect, admin, async (req, res) => {
-    try {
-        const products = await Product.find({}).sort({ createdAt: -1 });
-        res.json(products);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: 'Server Error' });
-    }
-});
-
-// --- Route: POST /api/admin/products ---
-// @desc    Create a new product
-// @access  Private/Admin
-router.post('/products', protect, admin, async (req, res) => {
-    const { name, description, price, discount, category, stock, image, featured } = req.body;
-
-    try {
-        const product = await Product.create({
-            name,
-            description,
-            price,
-            discount: discount || 0,
-            category,
-            stock,
-            image: image || '',
-            featured: featured || false,
-        });
-
-        res.status(201).json(product);
-    } catch (error) {
-        console.error(error);
-        res.status(400).json({ msg: 'Invalid product data', error: error.message });
-    }
-});
-
-// --- Route: PUT /api/admin/products/:id ---
-// @desc    Update a product (including discount)
-// @access  Private/Admin
-router.put('/products/:id', protect, admin, async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-
-        if (!product) {
-            return res.status(404).json({ msg: 'Product not found' });
-        }
-
-        // Update fields
-        product.name = req.body.name || product.name;
-        product.description = req.body.description || product.description;
-        product.price = req.body.price !== undefined ? req.body.price : product.price;
-        product.discount = req.body.discount !== undefined ? req.body.discount : product.discount;
-        product.category = req.body.category || product.category;
-        product.stock = req.body.stock !== undefined ? req.body.stock : product.stock;
-        product.image = req.body.image !== undefined ? req.body.image : product.image;
-        product.featured = req.body.featured !== undefined ? req.body.featured : product.featured;
-
-        const updatedProduct = await product.save();
-        res.json(updatedProduct);
-    } catch (error) {
-        console.error(error);
-        res.status(400).json({ msg: 'Failed to update product', error: error.message });
-    }
-});
-
-// --- Route: DELETE /api/admin/products/:id ---
-// @desc    Delete a product
-// @access  Private/Admin
-router.delete('/products/:id', protect, admin, async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-
-        if (!product) {
-            return res.status(404).json({ msg: 'Product not found' });
-        }
-
-        await Product.deleteOne({ _id: req.params.id });
-        res.json({ msg: 'Product removed successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: 'Server Error' });
-    }
-});
+// NOTE: Product management routes have been moved to adminProductRoutes.js
+// to support file uploads with Cloudinary integration
 
 // ==================== USER MANAGEMENT ROUTES ====================
 
@@ -332,6 +248,100 @@ router.get('/stats', protect, admin, async (req, res) => {
             ageGroupDistribution,
             experienceLevelDistribution
         });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// ==================== ORDER MANAGEMENT ROUTES ====================
+
+// --- Route: GET /api/admin/orders ---
+// @desc    Get all orders
+// @access  Private/Admin
+router.get('/orders', protect, admin, async (req, res) => {
+    try {
+        const orders = await Order.find({})
+            .populate('userId', 'email first_name last_name')
+            .sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// --- Route: GET /api/admin/orders/:id ---
+// @desc    Get single order by ID
+// @access  Private/Admin
+router.get('/orders/:id', protect, admin, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate('userId', 'email first_name last_name phone_number');
+
+        if (!order) {
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+
+        res.json(order);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// --- Route: PUT /api/admin/orders/:id/status ---
+// @desc    Update order status
+// @access  Private/Admin
+router.put('/orders/:id/status', protect, admin, async (req, res) => {
+    const { orderStatus, paymentStatus } = req.body;
+
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+
+        // Update order status if provided
+        if (orderStatus) {
+            order.orderStatus = orderStatus;
+            // Set deliveredAt timestamp when marked as delivered
+            if (orderStatus === 'delivered' && !order.deliveredAt) {
+                order.deliveredAt = new Date();
+            }
+        }
+
+        // Update payment status if provided
+        if (paymentStatus) {
+            order.paymentStatus = paymentStatus;
+        }
+
+        const updatedOrder = await order.save();
+
+        res.json({
+            msg: 'Order status updated successfully',
+            order: updatedOrder
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(400).json({ msg: 'Failed to update order status', error: error.message });
+    }
+});
+
+// --- Route: DELETE /api/admin/orders/:id ---
+// @desc    Delete an order
+// @access  Private/Admin
+router.delete('/orders/:id', protect, admin, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+
+        await Order.deleteOne({ _id: req.params.id });
+        res.json({ msg: 'Order deleted successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ msg: 'Server Error' });
