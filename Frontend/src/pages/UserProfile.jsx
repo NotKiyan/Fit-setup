@@ -47,7 +47,12 @@ export default function ProfilePage({ user, setUser }) {
     const [isLoadingData, setIsLoadingData] = useState(true);
 
     const [accountDetails, setAccountDetails] = useState({ first_name: '', last_name: '', phone_number: '' });
-    const [address, setAddress] = useState({ street: '', city: '', zip_code: '' });
+    const [addresses, setAddresses] = useState([]);
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [editingAddressIndex, setEditingAddressIndex] = useState(null);
+    const [currentAddress, setCurrentAddress] = useState({
+        firstName: '', lastName: '', phone: '', address: '', city: '', state: '', pincode: '', country: 'India', isDefault: false
+    });
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
 
     // **MODIFIED** Added new state for Personal Info editing
@@ -70,8 +75,9 @@ export default function ProfilePage({ user, setUser }) {
     const [isSavingPlan, setIsSavingPlan] = useState(false);
     const [isLoadingExercises, setIsLoadingExercises] = useState(false);
 
-    // --- Mock Data ---
-    const orders = [];
+    // --- Orders State ---
+    const [orders, setOrders] = useState([]);
+    const [isLoadingOrders, setIsLoadingOrders] = useState(false);
     const wishlist = [];
 
     // --- API Base URLs ---
@@ -79,8 +85,30 @@ export default function ProfilePage({ user, setUser }) {
     const USER_API_BASE_URL = `${API_BASE}/users`;
     const EXERCISE_API_BASE_URL = `${API_BASE}/exercises`;
     const PLAN_API_BASE_URL = `${API_BASE}/trainingplans`;
+    const ORDER_API_BASE_URL = `${API_BASE}/orders`;
 
     const navigate = useNavigate();
+
+    // --- Fetch Orders ---
+    const fetchOrders = async () => {
+        if (!user?.token) return;
+        setIsLoadingOrders(true);
+        try {
+            const response = await fetch(ORDER_API_BASE_URL, {
+                headers: { 'Authorization': `Bearer ${user.token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setOrders(data);
+            } else {
+                console.error('Failed to fetch orders');
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        } finally {
+            setIsLoadingOrders(false);
+        }
+    };
 
     // --- Fetch initial profile, plans, exercises (Optimized) ---
     useEffect(() => {
@@ -116,7 +144,27 @@ export default function ProfilePage({ user, setUser }) {
                 if (!isMounted) return;
 
                 setAccountDetails({ first_name: profileData.first_name || '', last_name: profileData.last_name || '', phone_number: profileData.phone_number || '' });
-                setAddress({ street: profileData.shipping_address?.street || '', city: profileData.shipping_address?.city || '', zip_code: profileData.shipping_address?.zip_code || '' });
+
+                // Load addresses array (with backward compatibility for old single address format)
+                if (Array.isArray(profileData.shipping_addresses) && profileData.shipping_addresses.length > 0) {
+                    setAddresses(profileData.shipping_addresses);
+                } else if (profileData.shipping_address) {
+                    // Convert old format to new format
+                    const legacyAddress = {
+                        firstName: profileData.first_name || '',
+                        lastName: profileData.last_name || '',
+                        phone: profileData.phone_number || '',
+                        address: profileData.shipping_address.street || '',
+                        city: profileData.shipping_address.city || '',
+                        state: '',
+                        pincode: profileData.shipping_address.zip_code || '',
+                        country: 'India',
+                        isDefault: true
+                    };
+                    setAddresses([legacyAddress]);
+                } else {
+                    setAddresses([]);
+                }
 
                 const pi = profileData.personalInfo || {};
                 // **NEW** Create a clean data object for both original and editable state
@@ -174,11 +222,207 @@ export default function ProfilePage({ user, setUser }) {
         );
     }, [currentPlanExercises, allExercises]);
 
+    // --- Fetch Orders when orders section is active ---
+    useEffect(() => {
+        if (activeSection === 'orders' && orders.length === 0) {
+            fetchOrders();
+        }
+    }, [activeSection]);
+
 
     // --- Handlers ---
     const showSuccess = (message) => { setSuccessMessage(message); setTimeout(() => setSuccessMessage(''), 3000); };
     const handleAccountDetailsChange = (e) => { setAccountDetails({ ...accountDetails, [e.target.name]: e.target.value }); };
-    const handleAddressChange = (e) => { setAddress({ ...address, [e.target.name]: e.target.value }); };
+    // --- Address Handlers ---
+    const handleAddressChange = (e) => {
+        const { name, value } = e.target;
+        setCurrentAddress(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleStartAddAddress = () => {
+        setCurrentAddress({
+            firstName: '', lastName: '', phone: '', address: '', city: '', state: '', pincode: '', country: 'India', isDefault: addresses.length === 0
+        });
+        setIsEditingAddress(true);
+        setEditingAddressIndex(null);
+    };
+
+    const handleStartEditAddress = (index) => {
+        setCurrentAddress({ ...addresses[index] });
+        setIsEditingAddress(true);
+        setEditingAddressIndex(index);
+    };
+
+    const handleCancelAddressEdit = () => {
+        setCurrentAddress({
+            firstName: '', lastName: '', phone: '', address: '', city: '', state: '', pincode: '', country: 'India', isDefault: false
+        });
+        setIsEditingAddress(false);
+        setEditingAddressIndex(null);
+    };
+
+    const handleSaveAddress = async () => {
+        if (!user?.token) return;
+
+        // Validation
+        if (!currentAddress.firstName || !currentAddress.lastName || !currentAddress.phone || !currentAddress.address || !currentAddress.city || !currentAddress.state || !currentAddress.pincode) {
+            setApiError('Please fill in all required fields');
+            return;
+        }
+
+        if (currentAddress.phone.length !== 10) {
+            setApiError('Phone number must be 10 digits');
+            return;
+        }
+
+        if (currentAddress.pincode.length !== 6) {
+            setApiError('Pincode must be 6 digits');
+            return;
+        }
+
+        setApiError('');
+
+        let updatedAddresses;
+        if (editingAddressIndex !== null) {
+            // Editing existing address
+            updatedAddresses = [...addresses];
+            updatedAddresses[editingAddressIndex] = currentAddress;
+        } else {
+            // Adding new address
+            updatedAddresses = [...addresses, currentAddress];
+        }
+
+        // If this address is set as default, unset all others
+        if (currentAddress.isDefault) {
+            updatedAddresses = updatedAddresses.map((addr, idx) => ({
+                ...addr,
+                isDefault: editingAddressIndex !== null ? idx === editingAddressIndex : idx === updatedAddresses.length - 1
+            }));
+        }
+
+        try {
+            const response = await fetch(`${USER_API_BASE_URL}/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    first_name: accountDetails.first_name,
+                    last_name: accountDetails.last_name,
+                    phone_number: accountDetails.phone_number,
+                    shipping_addresses: updatedAddresses
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    setUser(null);
+                    navigate('/login');
+                }
+                throw new Error(data.msg || `HTTP error! ${response.status}`);
+            }
+
+            setAddresses(updatedAddresses);
+            setIsEditingAddress(false);
+            setEditingAddressIndex(null);
+            setCurrentAddress({
+                firstName: '', lastName: '', phone: '', address: '', city: '', state: '', pincode: '', country: 'India', isDefault: false
+            });
+            showSuccess('Address saved!');
+        } catch (err) {
+            setApiError(`Save error: ${err.message}`);
+            console.error("Save address error:", err);
+        }
+    };
+
+    const handleDeleteAddress = async (index) => {
+        if (!user?.token) return;
+        if (!confirm('Are you sure you want to delete this address?')) return;
+
+        const updatedAddresses = addresses.filter((_, idx) => idx !== index);
+
+        // If we deleted the default address and there are still addresses, make the first one default
+        if (addresses[index].isDefault && updatedAddresses.length > 0) {
+            updatedAddresses[0].isDefault = true;
+        }
+
+        setApiError('');
+
+        try {
+            const response = await fetch(`${USER_API_BASE_URL}/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    first_name: accountDetails.first_name,
+                    last_name: accountDetails.last_name,
+                    phone_number: accountDetails.phone_number,
+                    shipping_addresses: updatedAddresses
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    setUser(null);
+                    navigate('/login');
+                }
+                throw new Error(data.msg || `HTTP error! ${response.status}`);
+            }
+
+            setAddresses(updatedAddresses);
+            showSuccess('Address deleted!');
+        } catch (err) {
+            setApiError(`Delete error: ${err.message}`);
+            console.error("Delete address error:", err);
+        }
+    };
+
+    const handleSetDefaultAddress = async (index) => {
+        if (!user?.token) return;
+
+        const updatedAddresses = addresses.map((addr, idx) => ({
+            ...addr,
+            isDefault: idx === index
+        }));
+
+        setApiError('');
+
+        try {
+            const response = await fetch(`${USER_API_BASE_URL}/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    first_name: accountDetails.first_name,
+                    last_name: accountDetails.last_name,
+                    phone_number: accountDetails.phone_number,
+                    shipping_addresses: updatedAddresses
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    setUser(null);
+                    navigate('/login');
+                }
+                throw new Error(data.msg || `HTTP error! ${response.status}`);
+            }
+
+            setAddresses(updatedAddresses);
+            showSuccess('Default address updated!');
+        } catch (err) {
+            setApiError(`Update error: ${err.message}`);
+            console.error("Set default address error:", err);
+        }
+    };
     const handlePasswordChange = (e) => { setPasswordData({ ...passwordData, [e.target.name]: e.target.value }); };
 
     // --- Corrected Personal Info Change Handler ---
@@ -356,23 +600,12 @@ export default function ProfilePage({ user, setUser }) {
     const handleDetailsSubmit = async (e) => {
         e.preventDefault(); if (!user?.token) return; setApiError('');
         try {
-            const response = await fetch(`${USER_API_BASE_URL}/profile`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` }, body: JSON.stringify({ first_name: accountDetails.first_name, last_name: accountDetails.last_name, phone_number: accountDetails.phone_number, shipping_address: address }) });
+            const response = await fetch(`${USER_API_BASE_URL}/profile`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` }, body: JSON.stringify({ first_name: accountDetails.first_name, last_name: accountDetails.last_name, phone_number: accountDetails.phone_number, shipping_addresses: addresses }) });
             const data = await response.json();
             if (!response.ok) { if (response.status === 401 || response.status === 403) {setUser(null); navigate('/login');} throw new Error(data.msg || `HTTP error! ${response.status}`); }
             setAccountDetails({ first_name: data.first_name || '', last_name: data.last_name || '', phone_number: data.phone_number || '' });
-            setAddress(data.shipping_address || { street: '', city: '', zip_code: '' }); showSuccess('Details updated!');
+            showSuccess('Details updated!');
         } catch (err) { setApiError(`Update error: ${err.message}`); console.error("Update details error:", err); }
-    };
-
-    const handleAddressSubmit = async (e) => {
-        e.preventDefault(); if (!user?.token) return; setApiError('');
-        try {
-            const response = await fetch(`${USER_API_BASE_URL}/profile`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${user.token}` }, body: JSON.stringify({ first_name: accountDetails.first_name, last_name: accountDetails.last_name, phone_number: accountDetails.phone_number, shipping_address: address }) });
-            const data = await response.json();
-            if (!response.ok) { if (response.status === 401 || response.status === 403) {setUser(null); navigate('/login');} throw new Error(data.msg || `HTTP error! ${response.status}`); }
-            setAddress(data.shipping_address || { street: '', city: '', zip_code: '' });
-            setAccountDetails({ first_name: data.first_name || '', last_name: data.last_name || '', phone_number: data.phone_number || '' }); showSuccess('Address updated!');
-        } catch (err) { setApiError(`Update error: ${err.message}`); console.error("Update address error:", err); }
     };
 
     const handlePasswordSubmit = async (e) => {
@@ -660,10 +893,9 @@ export default function ProfilePage({ user, setUser }) {
                             {isLoadingData && <p>Loading plans...</p>}
                             {!isLoadingData && trainingPlans.length === 0 && (
                                 <div className="no-plans-prompt">
-                                <p>No plans saved yet.</p><p>Create one or use AI?</p>
+                                <p>No plans saved yet.</p>
                                 <div className="creation-options">
-                                <button onClick={handleStartCreatePlan} className="btn-icon-large" title="Create New"><PlusCircleIcon /> Create Manually</button>
-                                <button onClick={handleAICreatePlan} className="btn-icon-large" title="Generate AI Plan"><BotIcon /> Generate with AI</button>
+                                <button onClick={handleStartCreatePlan} className="btn-icon-large" title="Create New"><PlusCircleIcon /> Create New Plan</button>
                                 </div>
                                 </div>
                             )}
@@ -683,18 +915,6 @@ export default function ProfilePage({ user, setUser }) {
                                 {manualPlans.length < 2 && (
                                     <button onClick={handleStartCreatePlan} className="btn btn-outline-primary add-plan-button"><PlusCircleIcon /> Create New Plan</button>
                                 )}
-                                {aiPlan && (
-                                    <>
-                                    <h4 style={{marginTop: '2rem'}}>AI Generated Plan</h4>
-                                    <div key={aiPlan._id} className="plan-card ai-plan-card">
-                                    <h5>{aiPlan.planName || 'AI Plan'} ({aiPlan.exercises?.length || 0} exercises)</h5>
-                                    <button className="btn-sm btn-secondary" onClick={() => handleViewPlan(aiPlan)} title="View"><EyeIcon/></button>
-                                    </div>
-                                    </>
-                                )}
-                                {!aiPlan && (
-                                    <button onClick={handleAICreatePlan} className="btn btn-outline-secondary add-plan-button ai-button"><BotIcon /> Generate AI Plan</button>
-                                )}
                                 </div>
                             )}
                             </div>
@@ -705,26 +925,302 @@ export default function ProfilePage({ user, setUser }) {
                         return <TrainingLog user={user} allExercises={allExercises} />;
                     case 'progress':
                         return <ProgressAnalytics user={user} allExercises={allExercises} />;
-                    case 'diet':
+                    case 'dietInfo':
+                        return <DietAnalysisForm user={user} personalInfo={personalInfo} />;
+                    case 'dietTracker':
+                        return <DietTracker user={user} personalInfo={personalInfo} />;
+                    case 'orders':
                         return (
-                            <>
-                            <DietAnalysisForm user={user} personalInfo={personalInfo} />
-                            <hr className="section-divider" />
-                            <DietTracker user={user} personalInfo={personalInfo} />
-                            </>
+                            <div className="profile-section">
+                                <div className="section-header">
+                                    <h3>Order History</h3>
+                                    <p>Your past purchases.</p>
+                                </div>
+                                {isLoadingOrders ? (
+                                    <p>Loading orders...</p>
+                                ) : orders.length === 0 ? (
+                                    <p>No orders yet.</p>
+                                ) : (
+                                    <div className="orders-list">
+                                        {orders.map(order => (
+                                            <div key={order._id} className="order-card">
+                                                <div className="order-header">
+                                                    <div>
+                                                        <strong>Order ID:</strong> {order._id.slice(-8)}
+                                                        <br />
+                                                        <small>{new Date(order.createdAt).toLocaleDateString()}</small>
+                                                    </div>
+                                                    <div className="order-status">
+                                                        <span className={`status-badge ${order.orderStatus}`}>
+                                                            {order.orderStatus}
+                                                        </span>
+                                                        <span className={`status-badge ${order.paymentStatus}`}>
+                                                            {order.paymentStatus}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="order-items">
+                                                    {order.items.map((item, idx) => (
+                                                        <div key={idx} className="order-item">
+                                                            {item.image && (
+                                                                <img src={item.image} alt={item.name} className="order-item-image" />
+                                                            )}
+                                                            <div className="order-item-details">
+                                                                <strong>{item.name}</strong>
+                                                                <p>Quantity: {item.quantity}</p>
+                                                                <p>Price: ₹{item.price.toLocaleString()}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="order-footer">
+                                                    <div>
+                                                        <strong>Shipping Address:</strong>
+                                                        <p>{order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.zipCode}</p>
+                                                    </div>
+                                                    <div className="order-total">
+                                                        <strong>Total: ₹{order.totalAmount.toLocaleString()}</strong>
+                                                    </div>
+                                                </div>
+                                                {order.deliveredAt && (
+                                                    <div className="order-delivered">
+                                                        <small>Delivered on: {new Date(order.deliveredAt).toLocaleString()}</small>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         );
-                    case 'orders': return ( <div className="profile-section"><div className="section-header"><h3>Order History</h3><p>Your past purchases.</p></div>{orders.length === 0 ? <p>No orders yet.</p> : <div>Display orders...</div>}</div> );
                     case 'wishlist': return ( <div className="profile-section"><div className="section-header"><h3>My Wishlist</h3><p>Your saved items.</p></div>{wishlist.length === 0 ? <p>Wishlist is empty.</p> : <div>Display wishlist...</div>}</div> );
                     case 'shipping':
                         return (
                             <div className="profile-section">
-                            <div className="section-header"><h3>Shipping Address</h3><p>Manage delivery info.</p></div>
-                            {apiError && <div className="error-message">{apiError}</div>}
-                            <form className="profile-form" onSubmit={handleAddressSubmit}>
-                            <div className="form-group"><label htmlFor="street">Street</label><input type="text" id="street" name="street" value={address.street} onChange={handleAddressChange} required /></div>
-                            <div className="form-row"><div className="form-group"><label htmlFor="city">City</label><input type="text" id="city" name="city" value={address.city} onChange={handleAddressChange} required /></div><div className="form-group"><label htmlFor="zip_code">ZIP</label><input type="text" id="zip_code" name="zip_code" value={address.zip_code} onChange={handleAddressChange} required /></div></div>
-                            <button type="submit" className="btn btn-primary">Update Address</button>
-                            </form>
+                                <div className="section-header">
+                                    <h3>Shipping Addresses</h3>
+                                    <p>Manage your delivery addresses</p>
+                                </div>
+                                {apiError && <div className="error-message">{apiError}</div>}
+
+                                {/* List of existing addresses */}
+                                {!isEditingAddress && (
+                                    <>
+                                        {addresses.length === 0 ? (
+                                            <p style={{textAlign: 'center', color: '#666', margin: '20px 0'}}>No addresses saved yet.</p>
+                                        ) : (
+                                            <div style={{display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px'}}>
+                                                {addresses.map((addr, index) => (
+                                                    <div key={index} style={{
+                                                        border: '1px solid #ddd',
+                                                        borderRadius: '8px',
+                                                        padding: '15px',
+                                                        backgroundColor: addr.isDefault ? '#f0f8ff' : '#fff',
+                                                        position: 'relative'
+                                                    }}>
+                                                        {addr.isDefault && (
+                                                            <span style={{
+                                                                position: 'absolute',
+                                                                top: '10px',
+                                                                right: '10px',
+                                                                backgroundColor: '#4CAF50',
+                                                                color: 'white',
+                                                                padding: '4px 10px',
+                                                                borderRadius: '4px',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: '600'
+                                                            }}>DEFAULT</span>
+                                                        )}
+                                                        <h4 style={{margin: '0 0 10px 0', fontSize: '1rem', fontWeight: '600'}}>
+                                                            {addr.firstName} {addr.lastName}
+                                                        </h4>
+                                                        <p style={{margin: '5px 0', color: '#555', fontSize: '0.9rem'}}>
+                                                            {addr.address}, {addr.city}, {addr.state} - {addr.pincode}
+                                                        </p>
+                                                        <p style={{margin: '5px 0', color: '#555', fontSize: '0.9rem'}}>
+                                                            Phone: {addr.phone}
+                                                        </p>
+                                                        <div style={{display: 'flex', gap: '10px', marginTop: '12px'}}>
+                                                            <button
+                                                                className="btn btn-secondary"
+                                                                style={{padding: '6px 12px', fontSize: '0.85rem'}}
+                                                                onClick={() => handleStartEditAddress(index)}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            {!addr.isDefault && (
+                                                                <button
+                                                                    className="btn btn-secondary"
+                                                                    style={{padding: '6px 12px', fontSize: '0.85rem'}}
+                                                                    onClick={() => handleSetDefaultAddress(index)}
+                                                                >
+                                                                    Set as Default
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                className="btn btn-danger"
+                                                                style={{padding: '6px 12px', fontSize: '0.85rem', marginLeft: 'auto'}}
+                                                                onClick={() => handleDeleteAddress(index)}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <button
+                                            className="btn btn-primary"
+                                            onClick={handleStartAddAddress}
+                                            style={{width: '100%'}}
+                                        >
+                                            + Add New Address
+                                        </button>
+                                    </>
+                                )}
+
+                                {/* Address form (for adding or editing) */}
+                                {isEditingAddress && (
+                                    <div>
+                                        <h4 style={{marginBottom: '20px', fontSize: '1.1rem'}}>
+                                            {editingAddressIndex !== null ? 'Edit Address' : 'Add New Address'}
+                                        </h4>
+                                        <div className="profile-form">
+                                            <div className="form-row">
+                                                <div className="form-group">
+                                                    <label htmlFor="firstName">First Name *</label>
+                                                    <input
+                                                        type="text"
+                                                        id="firstName"
+                                                        name="firstName"
+                                                        value={currentAddress.firstName}
+                                                        onChange={handleAddressChange}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label htmlFor="lastName">Last Name *</label>
+                                                    <input
+                                                        type="text"
+                                                        id="lastName"
+                                                        name="lastName"
+                                                        value={currentAddress.lastName}
+                                                        onChange={handleAddressChange}
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label htmlFor="phone">Phone Number *</label>
+                                                <input
+                                                    type="tel"
+                                                    id="phone"
+                                                    name="phone"
+                                                    value={currentAddress.phone}
+                                                    onChange={handleAddressChange}
+                                                    maxLength="10"
+                                                    required
+                                                />
+                                                <small className="form-hint">10 digits</small>
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label htmlFor="address">Address *</label>
+                                                <textarea
+                                                    id="address"
+                                                    name="address"
+                                                    value={currentAddress.address}
+                                                    onChange={handleAddressChange}
+                                                    rows="3"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="form-row">
+                                                <div className="form-group">
+                                                    <label htmlFor="city">City *</label>
+                                                    <input
+                                                        type="text"
+                                                        id="city"
+                                                        name="city"
+                                                        value={currentAddress.city}
+                                                        onChange={handleAddressChange}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label htmlFor="state">State *</label>
+                                                    <input
+                                                        type="text"
+                                                        id="state"
+                                                        name="state"
+                                                        value={currentAddress.state}
+                                                        onChange={handleAddressChange}
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="form-row">
+                                                <div className="form-group">
+                                                    <label htmlFor="pincode">Pincode *</label>
+                                                    <input
+                                                        type="text"
+                                                        id="pincode"
+                                                        name="pincode"
+                                                        value={currentAddress.pincode}
+                                                        onChange={handleAddressChange}
+                                                        maxLength="6"
+                                                        required
+                                                    />
+                                                    <small className="form-hint">6 digits</small>
+                                                </div>
+                                                <div className="form-group">
+                                                    <label htmlFor="country">Country *</label>
+                                                    <input
+                                                        type="text"
+                                                        id="country"
+                                                        name="country"
+                                                        value={currentAddress.country}
+                                                        onChange={handleAddressChange}
+                                                        readOnly
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="form-group" style={{marginTop: '10px'}}>
+                                                <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={currentAddress.isDefault}
+                                                        onChange={(e) => setCurrentAddress(prev => ({...prev, isDefault: e.target.checked}))}
+                                                    />
+                                                    <span>Set as default address</span>
+                                                </label>
+                                            </div>
+
+                                            <div style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-primary"
+                                                    onClick={handleSaveAddress}
+                                                    style={{flex: 1}}
+                                                >
+                                                    Save Address
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-secondary"
+                                                    onClick={handleCancelAddressEdit}
+                                                    style={{flex: 1}}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         );
                     case 'security':
@@ -785,7 +1281,8 @@ export default function ProfilePage({ user, setUser }) {
         <a className={activeSection === 'trainingPlans' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('trainingPlans'); }}><DumbbellIcon/> <span>Training Plans</span></a>
         <a className={activeSection === 'trainingLog' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('trainingLog'); }}><ListIcon/> <span>Training Log</span></a>
         <a className={activeSection === 'progress' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('progress'); }}><BarChart2Icon/> <span>Progress</span></a>
-        <a className={activeSection === 'diet' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('diet'); }}><ActivityIcon/> <span>Diet & Nutrition</span></a>
+        <a className={activeSection === 'dietInfo' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('dietInfo'); }}><ActivityIcon/> <span>Diet Info</span></a>
+        <a className={activeSection === 'dietTracker' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('dietTracker'); }}><BotIcon/> <span>Diet Tracker</span></a>
         <a className={activeSection === 'orders' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('orders'); }}><PackageIcon/> <span>Order History</span></a>
         <a className={activeSection === 'wishlist' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('wishlist'); }}><HeartIcon/> <span>My Wishlist</span></a>
         <a className={activeSection === 'shipping' ? 'active' : ''} onClick={() => { setViewMode('list'); setActiveSection('shipping'); }}><TruckIcon/> <span>Shipping</span></a>

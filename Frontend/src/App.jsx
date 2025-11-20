@@ -10,9 +10,11 @@ import LoginPage from './components/LoginPage'; //
 import RequireAuth from './components/RequireAuth'; //
 import AdminDashboard from './components/AdminDashboard'; // Added
 import EquipmentsPage from './pages/EquipmentsPage'; //
-import AccessoriesPage from './pages/AccessoriesPage'; //
 import ProductPage from './pages/ProductPage';
 import FavoritesPage from './pages/FavoritesPage';
+import CheckoutPage from './pages/CheckoutPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentFailurePage from './pages/PaymentFailurePage';
 /**
  * This component contains the routing logic and location-based effects.
  * It's wrapped by <Router> in the App component.
@@ -42,9 +44,11 @@ function AppContent({ user, setUser }) {
     <Route element={<Layout user={user} setUser={setUser} />}>
     <Route path="/" element={<HomePage />} />
     <Route path="/cart" element={<CartPage />} />
+    <Route path="/checkout" element={<CheckoutPage />} />
+    <Route path="/payment-success" element={<PaymentSuccessPage />} />
+    <Route path="/payment-failure" element={<PaymentFailurePage />} />
     <Route path="/favorites" element={<FavoritesPage />} />
     <Route path="/equipments" element={<EquipmentsPage />} />
-    <Route path="/accessories" element={<AccessoriesPage />} />
     <Route path="/blog" element={<BlogPage />} />
     <Route path="*" element={<Navigate to="/" replace />} />
     <Route path="/product/:id" element={<ProductPage />} />

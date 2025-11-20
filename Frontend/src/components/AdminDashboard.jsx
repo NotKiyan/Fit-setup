@@ -47,6 +47,7 @@ const AdminDashboard = ({ user }) => {
     });
 
     const [editingProduct, setEditingProduct] = useState(null);
+    const [specsInput, setSpecsInput] = useState('{}'); // Raw string input for specs
 
     // User edit modal state (omitted for brevity)
     const [editingUser, setEditingUser] = useState(null);
@@ -213,8 +214,13 @@ const AdminDashboard = ({ user }) => {
         formData.append('subCategory', productForm.subCategory || '');
         formData.append('stock', productForm.stock);
         formData.append('sku', productForm.sku || '');
-        // specs is an object — stringify it
-        formData.append('specs', JSON.stringify(productForm.specs || {}));
+        // Parse specs from input string
+        try {
+            const specsObj = specsInput ? JSON.parse(specsInput) : {};
+            formData.append('specs', JSON.stringify(specsObj));
+        } catch (err) {
+            formData.append('specs', JSON.stringify({}));
+        }
         formData.append('featured', productForm.featured ? 'true' : 'false');
 
         // Append new image files (if any)
@@ -263,6 +269,7 @@ const AdminDashboard = ({ user }) => {
                     specs: {},
                     featured: false
                 });
+                setSpecsInput('{}');
                 setEditingProduct(null);
                 fetchProducts();
             } else {
@@ -317,6 +324,7 @@ const AdminDashboard = ({ user }) => {
             specs: product.specs || {},
             featured: !!product.featured
         });
+        setSpecsInput(JSON.stringify(product.specs || {}, null, 2));
         setActiveTab('products');
     };
 
@@ -338,6 +346,7 @@ const AdminDashboard = ({ user }) => {
             specs: {},
             featured: false
         });
+        setSpecsInput('{}');
     };
 
     // Load data when tab changes
@@ -393,9 +402,118 @@ const AdminDashboard = ({ user }) => {
         <div className="admin-content">
         {/* STATISTICS TAB */}
         {activeTab === 'stats' && (
-            <>
-            {/* Stats JSX remains here (replace with your actual stats UI) */}
-            </>
+            <div className="stats-container">
+                <h2>Dashboard Overview</h2>
+
+                {/* Stats Cards */}
+                <div className="stats-grid">
+                    <div className="stat-card">
+                        <h3>Total Users</h3>
+                        <p className="stat-number">{stats.totalUsers || 0}</p>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Total Products</h3>
+                        <p className="stat-number">{stats.totalProducts || 0}</p>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Total Orders</h3>
+                        <p className="stat-number">{stats.totalOrders || 0}</p>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Total Revenue</h3>
+                        <p className="stat-number">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
+                    </div>
+                </div>
+
+                {/* Charts Section */}
+                <div className="charts-section">
+                    {/* Category Distribution */}
+                    {stats.categoryDistribution && stats.categoryDistribution.length > 0 && (
+                        <div className="chart-container">
+                            <h3>Products by Category</h3>
+                            <Pie
+                                data={{
+                                    labels: stats.categoryDistribution.map(item => item._id || 'Unknown'),
+                                    datasets: [{
+                                        data: stats.categoryDistribution.map(item => item.count),
+                                        backgroundColor: [
+                                            '#FF6384',
+                                            '#36A2EB',
+                                            '#FFCE56',
+                                            '#4BC0C0',
+                                            '#9966FF',
+                                            '#FF9F40'
+                                        ]
+                                    }]
+                                }}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: true,
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom'
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Order Status Distribution */}
+                    {stats.orderStatusDistribution && stats.orderStatusDistribution.length > 0 && (
+                        <div className="chart-container">
+                            <h3>Orders by Status</h3>
+                            <Bar
+                                data={{
+                                    labels: stats.orderStatusDistribution.map(item => item._id || 'Unknown'),
+                                    datasets: [{
+                                        label: 'Number of Orders',
+                                        data: stats.orderStatusDistribution.map(item => item.count),
+                                        backgroundColor: '#36A2EB'
+                                    }]
+                                }}
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: true,
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                stepSize: 1
+                                            }
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Additional Stats */}
+                <div className="additional-stats">
+                    <div className="stat-row">
+                        <span>Low Stock Products:</span>
+                        <strong>{stats.lowStockCount || 0}</strong>
+                    </div>
+                    <div className="stat-row">
+                        <span>Out of Stock Products:</span>
+                        <strong>{stats.outOfStockCount || 0}</strong>
+                    </div>
+                    <div className="stat-row">
+                        <span>Pending Orders:</span>
+                        <strong>{stats.pendingOrdersCount || 0}</strong>
+                    </div>
+                    <div className="stat-row">
+                        <span>Active Users:</span>
+                        <strong>{stats.activeUsersCount || 0}</strong>
+                    </div>
+                </div>
+            </div>
         )}
 
         {/* PRODUCTS TAB (FORM UPDATED) */}
@@ -495,12 +613,39 @@ const AdminDashboard = ({ user }) => {
             </div>
 
             <div className="form-group">
-            <label>Sub-category</label>
-            <input
-            type="text"
+            <label>Sub-category *</label>
+            <select
             value={productForm.subCategory}
             onChange={(e) => setProductForm({ ...productForm, subCategory: e.target.value })}
-            />
+            required
+            >
+            <option value="">Select Sub-category</option>
+
+            {/* Cardio */}
+            <optgroup label="Cardio">
+            <option value="Bikes">Bikes</option>
+            <option value="Elliptical">Elliptical</option>
+            <option value="Stair Climber">Stair Climber</option>
+            <option value="Treadmill">Treadmill</option>
+            </optgroup>
+
+            {/* Strength */}
+            <optgroup label="Strength">
+            <option value="Benches and Rack">Benches and Rack</option>
+            <option value="CrossFit">CrossFit</option>
+            <option value="MultiGym">MultiGym</option>
+            <option value="Power Rack">Power Rack</option>
+            </optgroup>
+
+            {/* Accessories */}
+            <optgroup label="Accessories">
+            <option value="Dumbbells">Dumbbells</option>
+            <option value="Plates and Weights">Plates and Weights</option>
+            <option value="Ropes and Bands">Ropes and Bands</option>
+            <option value="Kettlebell">Kettlebell</option>
+            <option value="Mats">Mats</option>
+            </optgroup>
+            </select>
             </div>
 
             {/* Specs (JSON) */}
@@ -508,17 +653,11 @@ const AdminDashboard = ({ user }) => {
             <label>Specs (JSON)</label>
             <textarea
             rows={3}
-            value={JSON.stringify(productForm.specs || {}, null, 0)}
-            onChange={(e) => {
-                try {
-                    const parsed = e.target.value ? JSON.parse(e.target.value) : {};
-                    setProductForm({ ...productForm, specs: parsed });
-                } catch (err) {
-                    // ignore parse errors for now
-                }
-            }}
+            value={specsInput}
+            onChange={(e) => setSpecsInput(e.target.value)}
+            placeholder='{"weight":"10kg","material":"steel"}'
             />
-            <small>{'Enter specs as JSON object, e.g. {"weight":"10kg","material":"steel"}'}</small>
+            <small>Enter specs as JSON object. Format will be validated on submit.</small>
             </div>
 
             {/* --- FILE INPUT --- */}

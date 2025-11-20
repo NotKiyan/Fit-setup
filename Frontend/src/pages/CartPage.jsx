@@ -86,13 +86,18 @@ export default function CartPage() {
         if (!userStr) return;
 
         const user = JSON.parse(userStr);
-        const item = cartItems.find(item => item.productId === productId);
+        // Handle both populated (object) and unpopulated (string) productId
+        const productIdStr = typeof productId === 'object' ? productId._id : productId;
+        const item = cartItems.find(item => {
+            const itemProductId = typeof item.productId === 'object' ? item.productId._id : item.productId;
+            return itemProductId === productIdStr;
+        });
         if (!item) return;
 
         const newQuantity = Math.max(1, item.quantity + delta);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+            const response = await fetch(`${API_BASE_URL}/cart/${productIdStr}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -119,9 +124,11 @@ export default function CartPage() {
         if (!userStr) return;
 
         const user = JSON.parse(userStr);
+        // Handle both populated (object) and unpopulated (string) productId
+        const productIdStr = typeof productId === 'object' ? productId._id : productId;
 
         try {
-            const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+            const response = await fetch(`${API_BASE_URL}/cart/${productIdStr}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${user.token}`
@@ -176,7 +183,7 @@ export default function CartPage() {
         {/* Cart Items List */}
         <div className="cart-items-list">
         {cartItems.map(item => (
-            <div className="cart-item" key={item.productId}>
+            <div className="cart-item" key={item._id || item.productId}>
             <img src={item.image} alt={item.name} className="cart-item-image" />
             <div className="cart-item-details">
             <h3 className="cart-item-name">{item.name}</h3>
@@ -215,7 +222,7 @@ export default function CartPage() {
         <span>Total</span>
         <span>₹{total.toLocaleString()}</span>
         </div>
-        <button className="btn btn-primary checkout-btn">Proceed to Checkout</button>
+        <Link to="/checkout" className="btn btn-primary checkout-btn">Proceed to Checkout</Link>
         <Link to="/equipments" className="continue-shopping-link">Continue Shopping</Link>
         </div>
         </div>

@@ -21,6 +21,11 @@
 .empty-cart {
     text-align: center;
     padding: 60px 20px;
+    min-height: 60vh; /* Ensure empty cart takes up enough space so footer doesn't dominate */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .empty-cart h2 {
@@ -201,6 +206,9 @@
     margin-top: 20px;
     padding: 12px;
     font-size: 1rem;
+    text-decoration: none;
+    display: block;
+    text-align: center;
 }
 
 .continue-shopping-link {
