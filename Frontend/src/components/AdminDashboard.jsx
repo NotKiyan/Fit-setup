@@ -956,7 +956,10 @@ const AdminDashboard = ({ user }) => {
                                 ))}
                                 <h4>Shipping Address:</h4>
                                 <p>
-                                    {order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.zipCode}
+                                    <strong>{order.shippingAddress.fullName}</strong><br />
+                                    {order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}<br />
+                                    Phone: {order.shippingAddress.phone}<br />
+                                    Email: {order.shippingAddress.email}
                                 </p>
                                 {order.deliveredAt && (
                                     <>

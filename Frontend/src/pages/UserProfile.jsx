@@ -976,7 +976,8 @@ export default function ProfilePage({ user, setUser }) {
                                                 <div className="order-footer">
                                                     <div>
                                                         <strong>Shipping Address:</strong>
-                                                        <p>{order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.zipCode}</p>
+                                                        <p>{order.shippingAddress.fullName}<br />
+                                                        {order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}</p>
                                                     </div>
                                                     <div className="order-total">
                                                         <strong>Total: ₹{order.totalAmount.toLocaleString()}</strong>
