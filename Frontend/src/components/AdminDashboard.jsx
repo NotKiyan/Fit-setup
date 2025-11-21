@@ -62,10 +62,28 @@ const AdminDashboard = ({ user }) => {
         experienceLevel: 'Not specified'
     });
 
-    // Placeholder user handlers (if you have real implementations, keep them)
-    const handleToggleStatus = (id, current) => {
-        // implement or call your existing handler
-        console.log('toggle status', id, current);
+    const handleToggleStatus = async (id, current) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${user.token}`
+                },
+                body: JSON.stringify({ isActive: !current })
+            });
+
+            if (response.ok) {
+                await fetchUsers(); // Refresh the users list
+                setSuccess('User status updated successfully!');
+            } else {
+                const data = await response.json();
+                setError(data.msg || 'Failed to update user status');
+            }
+        } catch (err) {
+            console.error('Error updating user status:', err);
+            setError('Server error. Please try again.');
+        }
     };
     const handleEditUser = (u) => {
         setEditingUser(u);
@@ -80,16 +98,84 @@ const AdminDashboard = ({ user }) => {
         });
         setShowEditModal(true);
     };
-    const handleResetPassword = (id, email) => {
-        console.log('reset password for', id, email);
+    const handleResetPassword = async (id, email) => {
+        if (!window.confirm(`Send password reset email to ${email}?`)) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${id}/reset-password`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${user.token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setSuccess(data.msg || 'Password reset email sent!');
+            } else {
+                const data = await response.json();
+                setError(data.msg || 'Failed to send password reset email');
+            }
+        } catch (err) {
+            console.error('Error sending password reset:', err);
+            setError('Server error. Please try again.');
+        }
     };
-    const handleDeleteUser = (id) => {
-        console.log('delete user', id);
+    const handleDeleteUser = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${user.token}`
+                }
+            });
+
+            if (response.ok) {
+                await fetchUsers(); // Refresh the users list
+                setSuccess('User deleted successfully!');
+            } else {
+                const data = await response.json();
+                setError(data.msg || 'Failed to delete user');
+            }
+        } catch (err) {
+            console.error('Error deleting user:', err);
+            setError('Server error. Please try again.');
+        }
     };
-    const handleUserSubmit = (e) => {
+    const handleUserSubmit = async (e) => {
         e.preventDefault();
-        console.log('submit user form', userForm);
-        setShowEditModal(false);
+        setError('');
+        setSuccess('');
+        setLoading(true);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${editingUser._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${user.token}`
+                },
+                body: JSON.stringify(userForm)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setShowEditModal(false);
+                setEditingUser(null);
+                await fetchUsers(); // Refresh the users list
+                setSuccess('User updated successfully!');
+            } else {
+                setError(data.msg || 'Failed to update user');
+            }
+        } catch (err) {
+            console.error('Error updating user:', err);
+            setError('Server error. Please try again.');
+        }
+
+        setLoading(false);
     };
     const handleCloseEditModal = () => {
         setShowEditModal(false);
