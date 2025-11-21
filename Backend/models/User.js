@@ -24,6 +24,20 @@ const UserSchema = new mongoose.Schema({
         required: true,
         default: 'customer',
     },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    ageGroup: {
+        type: String,
+        enum: ['18-24', '25-34', '35-44', '45-54', '55+', 'Not specified'],
+        default: 'Not specified'
+    },
+    experienceLevel: {
+        type: String,
+        enum: ['Beginner', 'Intermediate', 'Expert', 'Not specified'],
+        default: 'Not specified'
+    },
     // ----------------------
 
     first_name: {
